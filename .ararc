@@ -1,0 +1,2 @@
+[network.node.dns-discovery]
+domain = ara.local

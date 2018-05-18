@@ -1,0 +1,90 @@
+#!/usr/bin/env node
+
+const { info, warn, error } = require('ara-console')
+const { basename } = require('path')
+const program = require('yargs')
+const debug = require('debug')('ara:network:node')
+const rc = require('rc')('ara')
+
+const { exit } = process
+const $0 = basename(process.argv[1])
+
+const { argv } = program
+  .usage('usage: $0 [-hV] [options]')
+  .help(true)
+  .version(true)
+  .alias('help', 'h')
+  .option('type', {
+    alias: 't',
+    describe: "Node type to start"
+  })
+  .option('conf', {
+    alias: 'C',
+    describe: "Path to configuration file"
+  })
+  .option('debug', {
+    alias: 'D',
+    describe: "Enable debug output"
+  })
+
+process.on('unhandledRejection', onfatal)
+process.on('uncaughtException', onfatal)
+
+// main program entry
+void async function main() {
+  const { type } = argv
+  let node = null
+
+  if (null == type) {
+    error("Please specify a type with '%s --type <type>'", $0)
+    return exit(1)
+  }
+
+  try { node = require(`../nodes/${type}`) }
+  catch (err) {
+    debug(err)
+    try { node = require(`ara-network-node-${type}`) }
+    catch (err) {
+      debug(err)
+      error("Unknown node type: %s", type)
+      return exit(1)
+    }
+  }
+
+  if (null == node) {
+    error("Unable to resolve node type '%s'.", type)
+    return exit(1)
+  }
+
+  const { start, stop, configure } = node
+
+  if ('function' != typeof start) {
+    error("Node type '%s' is not startable (Missing 'start' function)", type)
+    return exit(1)
+  }
+
+  if ('function' != typeof stop) {
+    error("Node type '%s' is not stopable (Missing 'stop' function)", type)
+    return exit(1)
+  }
+
+  if ('function' == typeof configure) {
+    warn("Configuring network node '%s'.", type)
+    if (rc.network && rc.network.node && 'object' == typeof rc.network.node[type]) {
+      await configure(rc.network.node[type])
+    }
+  }
+
+  warn("Starting network node '%s'", type)
+  try { await start() }
+  catch (err) {
+    debug(err)
+    error("fatal: Network node '%s' encountered an error: ", err.message)
+    return exit(1)
+  }
+}()
+
+function onfatal(err) {
+  error("fatal:", err.message)
+  exit(1)
+}
