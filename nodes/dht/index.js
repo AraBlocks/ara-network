@@ -3,7 +3,7 @@
 const { info, warn, error } = require('ara-console')
 const extend = require('extend')
 const debug = require('debug')('ara:network:node:dht')
-const dht = require('../dht')
+const dht = require('../../dht')
 
 const conf = { port: 6881 }
 

@@ -3,7 +3,7 @@
 const { info, warn, error } = require('ara-console')
 const extend = require('extend')
 const debug = require('debug')('ara:network:node:dns')
-const dns = require('../dns')
+const dns = require('../../dns')
 
 /**
  * Configuration for a DNS server.

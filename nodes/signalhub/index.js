@@ -1,7 +1,7 @@
 'use strict'
 
 const { info, warn, error } = require('ara-console')
-const signalhub = require('../signalhub')
+const signalhub = require('../../signalhub')
 const extend = require('extend')
 const debug = require('debug')('ara:network:node:signalhub')
 
