@@ -8,7 +8,7 @@ const package = require('../package')
 const program = require('yargs')
 const onExit = require('signal-exit')
 const debug = require('debug')('ara:network:node')
-const rc = require('rc')('ara')
+const rc = require('ara-runtime-configuration')()
 
 const $0 = basename(process.argv[1] || `${package.name}-node`)
 
@@ -75,8 +75,7 @@ async function main() {
       await boot({type})
     } else {
       void warn(
-        "Multiple network node types given. "+
-        "Ignoring other arguments. Using closest `.ararc'."
+        "Multiple network node types given. Ignoring other arguments."
       )
 
       for (const k of type) {
