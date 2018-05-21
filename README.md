@@ -1,5 +1,5 @@
-# ara-network
-=============
+ara-network
+===========
 
 Interact with the _ARA Network_.
 
