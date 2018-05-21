@@ -2,89 +2,211 @@
 
 const { info, warn, error } = require('ara-console')
 const { basename } = require('path')
+const onBeforeExit = require('async-exit-hook')
+const cluster = require('cluster')
+const package = require('../package')
 const program = require('yargs')
+const onExit = require('signal-exit')
 const debug = require('debug')('ara:network:node')
 const rc = require('rc')('ara')
 
-const { exit } = process
-const $0 = basename(process.argv[1])
+const $0 = basename(process.argv[1] || `${package.name}-node`)
 
-const { argv } = program
-  .usage('usage: $0 [-hV] [options]')
-  .help(true)
-  .version(true)
+module.exports = { main, boot, program }
+
+void program
+  .help(false)
+  .version(false)
   .alias('help', 'h')
-  .option('type', {
-    alias: 't',
-    describe: "Node type to start"
-  })
+  .alias('version', 'V')
   .option('conf', {
+    type: 'string',
     alias: 'C',
     describe: "Path to configuration file"
   })
   .option('debug', {
+    type: 'boolean',
     alias: 'D',
     describe: "Enable debug output"
   })
 
-process.on('unhandledRejection', onfatal)
-process.on('uncaughtException', onfatal)
+// from command line
+if (null == module.parent) {
+  process.on('unhandledRejection', onfatal)
+  process.on('uncaughtException', onfatal)
+  main()
+}
 
-// main program entry
-void async function main() {
-  const { type } = argv
+/**
+ * Main program entry
+ * @public
+ */
+async function main() {
+  const { t, type = t } = program.argv
+  const { V, version = V } = program.argv
   let node = null
 
-  if (null == type) {
-    error("Please specify a type with '%s --type <type>'", $0)
-    return exit(1)
+  process.title = $0
+
+  if (version) {
+    info("%s version: %s", package.name, package.version)
+    process.exit(0)
   }
 
+  if (null == type) {
+    help()
+    if (program.argv.help) {
+      program.showHelp()
+      return process.exit(0)
+    } else if (process.argv.length <= 2) {
+      program.showHelp()
+      return process.exit(1)
+    }
+  }
+
+  if (program.argv.debug) {
+    require('debug').enable('ara:network*')
+  }
+
+  if (false == cluster.isMaster) {
+    process.on('message', onmessage)
+  } else {
+    if (type && false == Array.isArray(type)) {
+      await boot({type})
+    } else {
+      void warn(
+        "Multiple network node types given. "+
+        "Ignoring other arguments. Using closest `.ararc'."
+      )
+
+      for (const k of type) {
+        await boot({type: k})
+      }
+    }
+  }
+}
+
+/**
+ * Fork process and boot worker node.
+ * @public
+ * @param {Object} opts
+ * @param {Object} opts.type
+ * @return {cluster.Worker}
+ */
+async function boot({type}) {
+  const worker = cluster.fork()
+  const { id } = worker
+  worker.send({id, type})
+  return worker
+}
+
+/**
+ * Configures program usage
+ */
+function help() {
+  program
+    .help(true)
+    .version(true)
+    .usage('usage: $0 [-hV] [options]')
+    .option('type', {
+      type: 'string',
+      alias: 't',
+      describe: "Node type to start"
+    })
+}
+
+/**
+ * Worker message callback
+ * @private
+ * @param {Object} event
+ */
+async function onmessage({id, type}) {
   try { node = require(`../nodes/${type}`) }
   catch (err) {
     debug(err)
     try { node = require(`ara-network-node-${type}`) }
     catch (err) {
       debug(err)
-      error("Unknown node type: %s", type)
-      return exit(1)
+      error("worker: %s: Unknown node type: %s", type, err.message)
+      return process.exit(1)
     }
   }
 
   if (null == node) {
     error("Unable to resolve node type '%s'.", type)
-    return exit(1)
+    return process.exit(1)
   }
 
-  const { start, stop, configure } = node
+  const {
+    getInstance,
+    configure,
+    start,
+    stop,
+  } = node
 
   if ('function' != typeof start) {
     error("Node type '%s' is not startable (Missing 'start' function)", type)
-    return exit(1)
+    return process.exit(1)
   }
 
   if ('function' != typeof stop) {
     error("Node type '%s' is not stopable (Missing 'stop' function)", type)
-    return exit(1)
+    return process.exit(1)
   }
+
+  const multipleTypesGiven = (
+    Array.isArray(program.argv.type) ||
+    Array.isArray(program.argv.t))
 
   if ('function' == typeof configure) {
-    warn("Configuring network node '%s'.", type)
+    const conf = {}
     if (rc.network && rc.network.node && 'object' == typeof rc.network.node[type]) {
-      await configure(rc.network.node[type])
+      Object.assign(conf, rc.network.node[type])
     }
+    program.usage(`usage: $0 -t ${type} [options]`).help(true)
+    const promise = configure(conf, program)
+    void program.argv // parse
+    info("Configuring network node '%s'.", type)
+    await promise
   }
 
-  warn("Starting network node '%s'", type)
-  try { await start() }
-  catch (err) {
+  const argv = multipleTypesGiven ? {} : program.argv
+
+  try {
+    info("Starting network node '%s'", type)
+    if (true !== await start(argv)) {
+      onfatal(new Error(`Failed to start network node '${type}'`))
+    }
+  } catch (err) {
     debug(err)
     error("fatal: Network node '%s' encountered an error: ", err.message)
-    return exit(1)
+    return process.exit(1)
   }
-}()
 
+  process.title += ` (${type})`
+
+  const instance = await getInstance(argv)
+  instance.on('error', onerror)
+  onBeforeExit(onExit)
+
+  function onerror(err) {
+    error("worker#%s: %s: error:", id, type, err.message)
+  }
+
+  async function onexit(done) {
+    warn("Stopping network node '%s'", type)
+    await stop(argv)
+    done()
+  }
+}
+
+/**
+ * Handles fatal errors.
+ * @private
+ * @param {Error} err
+ */
 function onfatal(err) {
+  debug(err)
   error("fatal:", err.message)
-  exit(1)
+  process.exit(1)
 }
