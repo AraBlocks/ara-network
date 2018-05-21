@@ -1,8 +1,12 @@
 {
   "name": "ara-network",
-  "version": "1.0.0",
+  "version": "1.0.0-beta.1",
   "description": "Join and discovery peers within the Ara network swarm",
   "main": "index.js",
+  "bin": {
+    "ara-network-node": "bin/ara-network-node",
+    "ann": "bin/ara-network-node"
+  },
   "scripts": {
     "test": "ava test"
   },
@@ -25,6 +29,8 @@
   "dependencies": {
     "ara-console": "github:arablocks/ara-console",
     "ara-crypto": "github:arablocks/ara-crypto",
+    "async-exit-hook": "^2.0.1",
+    "bittorrent-dht": "^8.3.0",
     "connections": "^1.4.2",
     "debug": "^3.1.0",
     "discovery-swarm": "^5.1.1",
@@ -34,6 +40,7 @@
     "ip": "^1.1.5",
     "randombytes": "^2.0.6",
     "rc": "^1.2.7",
+    "signal-exit": "^3.0.2",
     "signalhub": "^4.9.0",
     "yargs": "^11.0.0"
   },
