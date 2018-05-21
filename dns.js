@@ -4,6 +4,13 @@ const discovery = require('dns-discovery')
 const extend = require('extend')
 const debug = require('debug')('ara:network:dns')
 
+const defaults = {
+  multicast: true,
+  loopback: true,
+  domain: 'ara.local',
+  limit: 10000,
+}
+
 /**
  * Create a DNS discovery server
  * @public
@@ -16,23 +23,9 @@ const debug = require('debug')('ara:network:dns')
  */
 function createServer(opts) {
   if (!opts || 'object' != typeof opts) { opts = {} }
-  const server = discovery(configure(opts))
-  server.on('listening', () => {
-  })
+  opts = extend(true, {}, defaults, opts)
+  const server = discovery(opts)
   return server
-}
-
-function configure(opts) {
-  return extend(true, {}, defaults(), opts)
-}
-
-function defaults() {
-  return {
-    multicast: true,
-    loopback: true,
-    domain: 'ara.local',
-    limit: 10000,
-  }
 }
 
 module.exports = {
