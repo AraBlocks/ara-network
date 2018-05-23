@@ -29,5 +29,6 @@ function createServer(opts) {
 }
 
 module.exports = {
-  createServer
+  createServer,
+  defaults,
 }
