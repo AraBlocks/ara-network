@@ -43,4 +43,5 @@ function createClient(opts) {
 module.exports = {
   createClient,
   createServer,
+  defaults,
 }
