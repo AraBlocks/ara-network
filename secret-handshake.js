@@ -1,8 +1,8 @@
 'use strict'
 
-const handshake = require('secret-handshake')
 const isBuffer = require('is-buffer')
 const pull = require('pull-stream')
+const shs = require('secret-handshake')
 
 /**
  * Pull (pipe) a source stream into a destination
@@ -62,9 +62,9 @@ function createServer(opts) {
  * @public
  * @param {Object} opts
  * @param {Function} opts.onauthorize
- * @param {Object} opts.server
- * @param {Object} opts.server.publicKey
- * @param {Object} opts.server.secretKey
+ * @param {Object} opts.remote
+ * @param {Object} opts.remote.publicKey
+ * @param {Object} opts.remote.secretKey
  * @param {Object} opts.network
  * @param {Object} opts.network.key
  * @return {Object}
@@ -76,9 +76,9 @@ function createClient(opts) {
       "ara-network.secret-handshake.createClient: Expecting object.")
   }
 
-  if (null == opts.server || 'object' != typeof opts.server) {
+  if (null == opts.remote || 'object' != typeof opts.remote) {
     throw new TypeError(
-      "ara-network.secret-handshake.createClient: Expecting server to be an object.")
+      "ara-network.secret-handshake.createClient: Expecting remote to be an object.")
   }
 
   if (null == opts.network || 'object' != typeof opts.network) {
@@ -91,8 +91,8 @@ function createClient(opts) {
       "ara-network.secret-handshake.createClient: Expecting network key to be a buffer.")
   }
 
-  const { server, network } = opts
-  const client = shs.createClient(server, network.key)
+  const { remote, network } = opts
+  const client = shs.createClient(remote, network.key)
   return client
 }
 
