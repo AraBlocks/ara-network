@@ -6,7 +6,6 @@ const onBeforeExit = require('async-exit-hook')
 const cluster = require('cluster')
 const package = require('../package')
 const program = require('yargs')
-const onExit = require('signal-exit')
 const debug = require('debug')('ara:network:node')
 const rc = require('ara-runtime-configuration')()
 
@@ -186,7 +185,7 @@ async function onmessage({id, type}) {
 
   const instance = await getInstance(argv)
   instance.on('error', onerror)
-  onBeforeExit(onExit)
+  onBeforeExit(onexit)
 
   function onerror(err) {
     error("worker#%s: %s: error:", id, type, err.message)
