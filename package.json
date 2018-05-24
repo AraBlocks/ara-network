@@ -5,7 +5,9 @@
   "main": "index.js",
   "bin": {
     "ara-network-node": "bin/ara-network-node",
-    "ann": "bin/ara-network-node"
+    "ara-network-secrets": "bin/ara-network-secrets",
+    "ann": "bin/ara-network-node",
+    "ans": "bin/ara-network-secrets"
   },
   "scripts": {
     "test": "ava test"
