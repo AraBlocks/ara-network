@@ -62,9 +62,9 @@ function createServer(opts) {
  * @public
  * @param {Object} opts
  * @param {Function} opts.onauthorize
- * @param {Object} opts.client
- * @param {Object} opts.client.publicKey
- * @param {Object} opts.client.secretKey
+ * @param {Object} opts.server
+ * @param {Object} opts.server.publicKey
+ * @param {Object} opts.server.secretKey
  * @param {Object} opts.network
  * @param {Object} opts.network.key
  * @return {Object}
@@ -76,9 +76,9 @@ function createClient(opts) {
       "ara-network.secret-handshake.createClient: Expecting object.")
   }
 
-  if (null == opts.client || 'object' != typeof opts.client) {
+  if (null == opts.server || 'object' != typeof opts.server) {
     throw new TypeError(
-      "ara-network.secret-handshake.createClient: Expecting client to be an object.")
+      "ara-network.secret-handshake.createClient: Expecting server to be an object.")
   }
 
   if (null == opts.network || 'object' != typeof opts.network) {
