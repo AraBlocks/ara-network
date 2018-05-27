@@ -43,7 +43,10 @@ function encrypt(opts) {
     iv: alloc(crypto.randomBytes(16)),
   })
 
+  const digest = alloc(crypto.blake2b(Buffer.concat(freelist)))
+
   result.discoveryKey = keys.discovery
+  result.digest = digest
 
   free()
 
