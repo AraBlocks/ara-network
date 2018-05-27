@@ -139,20 +139,26 @@ function encrypt(opts) {
  * @return {Object}
  */
 function decrypt(doc, opts) {
-  const keys = {}
   const buffer = crypto.decrypt(doc.keystore, opts)
   const offset = 3 // for header
   const header = read(0, offset)
+  const keys = {
+    discoveryKey: null,
+    network: { publicKey: null, secretKey: null },
+    remote: { publicKey: null, secretKey: null },
+    client: { publicKey: null, secretKey: null },
+  }
+
   keys.discoveryKey = read(offset + DISCOVERY, 32)
 
   if (0 == Buffer.compare(PKX, header)) {
-    keys.network = { publicKey: read(offset + NETWORK * 32, 32) }
-    keys.remote = { publicKey: read(offset + REMOTE * 32, 32) }
-    keys.client = { secretKey: read(offset + CLIENT * 32, 64) }
+    keys.network.publicKey = read(offset + NETWORK * 32, 32)
+    keys.remote.publicKey = read(offset + REMOTE * 32, 32)
+    keys.client.secretKey = read(offset + CLIENT * 32, 64)
   } else if (0 == Buffer.compare(SKX, header)) {
-    keys.network = { publicKey: read(offset + NETWORK * 64, 64) }
-    keys.remote = { publicKey: read(offset + REMOTE * 64, 64) }
-    keys.client = { secretKey: read(offset + CLIENT * 64, 64) }
+    keys.network.secretKey = read(offset + NETWORK * 64, 64)
+    keys.remote.secretKey = read(offset + REMOTE * 64, 64)
+    keys.client.secretKey = read(offset + CLIENT * 64, 64)
   } else {
     throw new TypeError("Malformed secrets keystore buffer.")
   }
