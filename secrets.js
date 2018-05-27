@@ -7,6 +7,9 @@ const NETWORK = 1
 const CLIENT = 3
 const REMOTE = 2
 
+const PKX = Buffer.from('PKX') // public keystore header
+const SKX = Buffer.from('SKX') // secret keystore header
+
 /**
  * Creates a network secrets document containing
  * a keystore and discovery key. The keystore stores
@@ -38,14 +41,16 @@ function encrypt(opts) {
   keys.discoveryKey = crypto.discoveryKey(alloc(32, opts.key))
 
   const keystores = {
-    public: [ // 160 = 32 + 32 + 32 + 64
+    public: [ // 163 = 3 + 32 + 32 + 32 + 64
+      PKX,
       keys.discoveryKey, // 32
       keys.network.publicKey, // 32
       keys.remote.publicKey, // 32
       keys.client.secretKey, // 64
     ],
 
-    secret: [ // 224 = 32 + 64 + 64 + 64
+    secret: [ // 227 = 3 + 32 + 64 + 64 + 64
+      SKX,
       keys.discoveryKey, // 32
       keys.network.secretKey, // 64
       keys.remote.secretKey, // 64
@@ -122,6 +127,7 @@ function encrypt(opts) {
  * - Secret keys are 64 bytes and can appear in both public and private keystores
  *
  * The order in which keys appear in a buffer are detailed below:
+ * 0 - 3 byte header containing the `PKX` or `SKX` string denoting keystore type
  * 1 - 32 byte discovery key
  * 2 - 32 byte network public key or 64 byte network private key
  * 3 - 32 byte remote public key or 64 byte remote private key
@@ -135,16 +141,20 @@ function encrypt(opts) {
 function decrypt(doc, opts) {
   const keys = {}
   const buffer = crypto.decrypt(doc.keystore, opts)
-  keys.discoveryKey = read(DISCOVERY, 32)
+  const offset = 3 // for header
+  const header = read(0, offset)
+  keys.discoveryKey = read(offset + DISCOVERY, 32)
 
-  if (opts.public) {
-    keys.network = { publicKey: read(NETWORK * 32, 32) }
-    keys.remote = { publicKey: read(REMOTE * 32, 32) }
-    keys.client = { secretKey: read(CLIENT * 32, 64) }
+  if (0 == Buffer.compare(PKX, header)) {
+    keys.network = { publicKey: read(offset + NETWORK * 32, 32) }
+    keys.remote = { publicKey: read(offset + REMOTE * 32, 32) }
+    keys.client = { secretKey: read(offset + CLIENT * 32, 64) }
+  } else if (0 == Buffer.compare(SKX, header)) {
+    keys.network = { publicKey: read(offset + NETWORK * 64, 64) }
+    keys.remote = { publicKey: read(offset + REMOTE * 64, 64) }
+    keys.client = { secretKey: read(offset + CLIENT * 64, 64) }
   } else {
-    keys.network = { publicKey: read(NETWORK * 64, 64) }
-    keys.remote = { publicKey: read(REMOTE * 64, 64) }
-    keys.client = { secretKey: read(CLIENT * 64, 64) }
+    throw new TypeError("Malformed secrets keystore buffer.")
   }
 
   return keys
