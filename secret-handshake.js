@@ -10,10 +10,12 @@ class Handshake {
       throw new TypeError("Handshake: Expecting object.")
     }
 
-    const { remote, client, network } = opts
+    const { remote, client, network, discoveryKey } = opts
+
     this.remote = remote
     this.client = client
     this.network = network
+    this.discoveryKey = discoveryKey
   }
 
   iv() {
@@ -21,13 +23,12 @@ class Handshake {
   }
 
   key() {
-    return this.network.key.slice(0, 16)
+    return this.discoveryKey.slice(0, 16)
   }
 
   digest() {
     const buffers = []
-    buffers.push(this.network.key)
-    buffers.push(this.remote.secretKey)
+    buffers.push(this.discoveryKey)
     buffers.push(this.client.secretKey)
     return crypto.blake2b(Buffer.concat(buffers))
   }
