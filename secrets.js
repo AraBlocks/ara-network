@@ -3,9 +3,9 @@
 const crypto = require('ara-crypto')
 
 const DISCOVERY = 0
-const REMOTE = 1
-const CLIENT = 2
-const NETWORK = 3
+const NETWORK = 1
+const CLIENT = 3
+const REMOTE = 2
 
 /**
  * Creates a network secrets document containing
@@ -19,34 +19,56 @@ const NETWORK = 3
  * @return {Object}
  */
 function encrypt(opts) {
-  if (null == opts || 'object' != typeof opts) {
-    opts = {}
-    opts.key = crypto.randomBytes(32)
+  const freelist = []
+  const keys = {}
+
+  const result = {
+    public: {},
+    secret: {},
   }
 
-  const freelist = []
-  const result = {}
-  const keys = {}
+  if (null == opts || 'object' != typeof opts) {
+    opts = {}
+    opts.key = alloc(crypto.randomBytes(32))
+  }
+
   keys.remote = crypto.keyPair(seed('remote'))
   keys.client = crypto.keyPair(seed('client'))
   keys.network = crypto.keyPair(networkSeed())
-  keys.discovery = crypto.discoveryKey(alloc(32, opts.key))
+  keys.discoveryKey = crypto.discoveryKey(alloc(32, opts.key))
 
-  const keystores = [ keys.discovery ]
+  const keystores = {
+    public: [ // 160 = 32 + 32 + 32 + 64
+      keys.discoveryKey, // 32
+      keys.network.publicKey, // 32
+      keys.remote.publicKey, // 32
+      keys.client.secretKey, // 64
+    ],
 
-  push(REMOTE, keys.remote)
-  push(CLIENT, keys.client)
-  push(NETWORK, keys.network)
+    secret: [ // 224 = 32 + 64 + 64 + 64
+      keys.discoveryKey, // 32
+      keys.network.secretKey, // 64
+      keys.remote.secretKey, // 64
+      keys.client.secretKey, // 64
+    ],
+  }
 
-  result.keystore = crypto.encrypt(alloc(Buffer.concat(keystores)), {
-    key: alloc(16, opts.key),
-    iv: alloc(crypto.randomBytes(16)),
-  })
-
+  const iv = alloc(crypto.randomBytes(16))
+  const key = alloc(16, opts.key)
   const digest = alloc(crypto.blake2b(Buffer.concat(freelist)))
 
-  result.discoveryKey = keys.discovery
-  result.digest = digest
+  const buffers = {
+    public: alloc(Buffer.concat(keystores.public)),
+    secret: alloc(Buffer.concat(keystores.secret)),
+  }
+
+  result.public.discoveryKey = keys.discoveryKey.toString('hex')
+  result.public.keystore = crypto.encrypt(buffers.public, {key, iv})
+  result.public.digest = digest.toString('hex')
+
+  result.secret.discoveryKey = keys.discoveryKey.toString('hex')
+  result.secret.keystore = crypto.encrypt(buffers.secret, {key, iv})
+  result.secret.digest = digest.toString('hex')
 
   free()
 
@@ -75,12 +97,6 @@ function encrypt(opts) {
     while (buffer = freelist.shift()) { buffer.fill(0) }
   }
 
-  function push(index, keyPair) {
-    keystores[index] = alloc(Buffer.concat([
-      keyPair.publicKey, keyPair.secretKey
-    ]))
-  }
-
   function networkSeed() {
     return alloc(Buffer.concat([
       alloc(keys.remote.secretKey.slice(-16)),
@@ -100,6 +116,17 @@ function encrypt(opts) {
 /**
  * Decrypts an encrypt network secrets document into
  * a set of secret public and secret key pairs.
+ *
+ * - Discovery keys are 32 bytes and appear at the header of a decrypted buffer
+ * - Public keys are 32 bytes and only appear in a public keystore
+ * - Secret keys are 64 bytes and can appear in both public and private keystores
+ *
+ * The order in which keys appear in a buffer are detailed below:
+ * 1 - 32 byte discovery key
+ * 2 - 32 byte network public key or 64 byte network private key
+ * 3 - 32 byte remote public key or 64 byte remote private key
+ * 4 - 64 byte client private key
+ *
  * @public
  * @param {Object} doc
  * @param {Object} opts
@@ -108,20 +135,16 @@ function encrypt(opts) {
 function decrypt(doc, opts) {
   const keys = {}
   const buffer = crypto.decrypt(doc.keystore, opts)
-  keys.discoveryKey = read(0, 32)
-  keys.remote = {
-    publicKey: read(32, 32),
-    secretKey: read(64, 64),
-  }
+  keys.discoveryKey = read(DISCOVERY, 32)
 
-  keys.client = {
-    publicKey: read(128, 32),
-    secretKey: read(160, 64),
-  }
-
-  keys.network = {
-    publicKey: read(224, 32),
-    secretKey: read(256, 64),
+  if (opts.public) {
+    keys.network = { publicKey: read(NETWORK * 32, 32) }
+    keys.remote = { publicKey: read(REMOTE * 32, 32) }
+    keys.client = { secretKey: read(CLIENT * 32, 64) }
+  } else {
+    keys.network = { publicKey: read(NETWORK * 64, 64) }
+    keys.remote = { publicKey: read(REMOTE * 64, 64) }
+    keys.client = { secretKey: read(CLIENT * 64, 64) }
   }
 
   return keys
