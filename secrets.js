@@ -4,8 +4,8 @@ const crypto = require('ara-crypto')
 
 const DISCOVERY = 0
 const NETWORK = 1
-const CLIENT = 3
 const REMOTE = 2
+const CLIENT = 3
 
 const PKX = Buffer.from('PKX') // public keystore header
 const SKX = Buffer.from('SKX') // secret keystore header
@@ -152,13 +152,29 @@ function decrypt(doc, opts) {
   keys.discoveryKey = read(offset + DISCOVERY, 32)
 
   if (0 == Buffer.compare(PKX, header)) {
-    keys.network.publicKey = read(offset + NETWORK * 32, 32)
-    keys.remote.publicKey = read(offset + REMOTE * 32, 32)
-    keys.client.secretKey = read(offset + CLIENT * 32, 64)
+    const shift = offset
+    const size = 32
+
+    // parse keys
+    keys.network.publicKey = read((NETWORK * 32) + shift, 32)
+    keys.remote.publicKey = read((REMOTE * 32) + shift, 32)
+    keys.client.secretKey = read((CLIENT * 32) + shift, 64)
+
+    // derive public key
+    keys.client.publicKey = keys.client.secretKey.slice(32)
   } else if (0 == Buffer.compare(SKX, header)) {
-    keys.network.secretKey = read(offset + NETWORK * 64, 64)
-    keys.remote.secretKey = read(offset + REMOTE * 64, 64)
-    keys.client.secretKey = read(offset + CLIENT * 64, 64)
+    const shift = offset - keys.discoveryKey.length
+    const size = 64
+
+    // parse keys
+    keys.network.secretKey = read((NETWORK * size) + shift, size)
+    keys.remote.secretKey = read((REMOTE * size) + shift, size)
+    keys.client.secretKey = read((CLIENT * size) + shift, size)
+
+    // derivce public keys
+    keys.network.publicKey = keys.network.secretKey.slice(32)
+    keys.remote.publicKey = keys.remote.secretKey.slice(32)
+    keys.client.publicKey = keys.client.secretKey.slice(32)
   } else {
     throw new TypeError("Malformed secrets keystore buffer.")
   }
