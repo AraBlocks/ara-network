@@ -46,7 +46,6 @@
     "pull-stream": "^3.6.8",
     "randombytes": "^2.0.6",
     "rc": "^1.2.7",
-    "secret-handshake": "^1.1.13",
     "signal-exit": "^3.0.2",
     "signalhub": "^4.9.0",
     "yargs": "^11.0.0"
