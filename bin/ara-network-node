@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const { info, warn, error } = require('ara-console')
-const { basename } = require('path')
+const { basename, resolve } = require('path')
 const onBeforeExit = require('async-exit-hook')
 const cluster = require('cluster')
 const package = require('../package')
@@ -43,7 +43,6 @@ if (null == module.parent) {
 async function main() {
   const { t, type = t } = program.argv
   const { V, version = V } = program.argv
-  let node = null
 
   process.title = $0
 
@@ -119,16 +118,24 @@ function help() {
  * @param {Object} event
  */
 async function onmessage({id, type}) {
-  try { node = require(`../nodes/${type}`) }
-  catch (err) {
-    debug(err)
-    try { node = require(`ara-network-node-${type}`) }
+  let node = null
+  const boot = (paths) =>  {
+    try { node = require(paths.shift()) }
     catch (err) {
       debug(err)
-      error("worker: %s: Unknown node type: %s", type, err.message)
-      return process.exit(1)
+      if (paths.length) { return boot(paths) } else {
+        error("worker: %s: Unknown node type: %s", type, err.message)
+        return process.exit(1)
+      }
     }
   }
+
+  boot([
+    `../nodes/${type}`,
+    `ara-network-node-${type}`,
+    type,
+    resolve(type)
+  ])
 
   if (null == node) {
     error("Unable to resolve node type '%s'.", type)
