@@ -94,7 +94,11 @@ async function boot({type}) {
   const worker = cluster.fork()
   const { id } = worker
   worker.send({id, type})
+  worker.on('error', onerror)
   return worker
+  function onerror(err) {
+    error("worker#%s: %s: error:", id, type, err.message)
+  }
 }
 
 /**
