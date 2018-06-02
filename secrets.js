@@ -35,10 +35,10 @@ function encrypt(opts) {
     opts.key = alloc(crypto.randomBytes(32))
   }
 
+  keys.discoveryKey = crypto.discoveryKey(crypto.randomBytes(32))
   keys.remote = crypto.keyPair(seed('remote'))
   keys.client = crypto.keyPair(seed('client'))
-  keys.network = crypto.keyPair(networkSeed())
-  keys.discoveryKey = crypto.discoveryKey(alloc(32, opts.key))
+  keys.network = crypto.keyPair(networkSeed(keys.client, keys.remote))
 
   const keystores = {
     public: [ // 163 = 3 + 32 + 32 + 32 + 64
@@ -58,14 +58,19 @@ function encrypt(opts) {
     ],
   }
 
-  const iv = alloc(crypto.randomBytes(16))
-  const key = alloc(16, opts.key)
-  const digest = alloc(crypto.blake2b(Buffer.concat(freelist)))
+  const key = alloc(16,
+    crypto.blake2b(Buffer.isBuffer(opts.key)
+      ? opts.key
+      : Buffer.from(opts.key)))
 
   const buffers = {
     public: alloc(Buffer.concat(keystores.public)),
     secret: alloc(Buffer.concat(keystores.secret)),
   }
+
+  const iv = alloc(crypto.randomBytes(16))
+
+  const digest = alloc(crypto.blake2b(Buffer.concat(freelist)))
 
   result.public.discoveryKey = keys.discoveryKey.toString('hex')
   result.public.keystore = crypto.encrypt(buffers.public, {key, iv})
@@ -102,10 +107,10 @@ function encrypt(opts) {
     while (buffer = freelist.shift()) { buffer.fill(0) }
   }
 
-  function networkSeed() {
+  function networkSeed(client, remote) {
     return alloc(Buffer.concat([
-      alloc(keys.remote.secretKey.slice(-16)),
-      keys.client.secretKey.slice(0, 16)
+      remote.secretKey.slice(-16),
+      client.secretKey.slice(0, 16),
     ]))
   }
 
@@ -139,7 +144,11 @@ function encrypt(opts) {
  * @return {Object}
  */
 function decrypt(doc, opts) {
-  const buffer = crypto.decrypt(doc.keystore, opts)
+  const key = crypto.blake2b(Buffer.isBuffer(opts.key)
+    ? opts.key
+    : Buffer.from(opts.key)).slice(0, 16)
+
+  const buffer = crypto.decrypt(doc.keystore, Object.assign({}, opts, {key}))
   const offset = 3 // for header
   const header = read(0, offset)
   const keys = {
