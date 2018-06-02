@@ -3,7 +3,7 @@
 const { info, warn, error } = require('ara-console')
 const { basename, resolve } = require('path')
 const onBeforeExit = require('async-exit-hook')
-const cluster = require('cluster')
+const { fork } = require('child_process')
 const package = require('../package')
 const program = require('yargs')
 const debug = require('debug')('ara:network:node')
@@ -14,19 +14,20 @@ const $0 = basename(process.argv[1] || `${package.name}-node`)
 module.exports = { main, boot, program }
 
 void program
+  .wrap(80)
   .help(false)
   .version(false)
   .alias('help', 'h')
   .alias('version', 'V')
-  .option('conf', {
-    type: 'string',
-    alias: 'C',
-    describe: "Path to configuration file"
-  })
   .option('debug', {
     type: 'boolean',
     alias: 'D',
     describe: "Enable debug output"
+  })
+  .option('conf', {
+    type: 'string',
+    alias: 'C',
+    describe: "Path to configuration file"
   })
 
 // from command line
@@ -66,7 +67,7 @@ async function main() {
     require('debug').enable('ara:network*')
   }
 
-  if (false == cluster.isMaster) {
+  if (program.argv['child-process']) {
     process.on('message', onmessage)
   } else {
     if (type && false == Array.isArray(type)) {
@@ -91,8 +92,14 @@ async function main() {
  * @return {cluster.Worker}
  */
 async function boot({type}) {
-  const worker = cluster.fork()
-  const { id } = worker
+  const env = process.env
+  const cwd = process.cwd()
+  const argv = process.argv.slice(2).concat('--child-process')
+  const argv1 = process.argv[1]
+  const stdio = 'inherit'
+  const worker = fork(argv1, argv, { stdio, cwd, env })
+  const { pid, id = pid } = worker
+
   worker.send({id, type})
   worker.on('error', onerror)
   return worker
