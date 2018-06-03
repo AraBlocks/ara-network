@@ -1,6 +1,12 @@
 'use strict'
 
+const { resolve } = require('path')
+const secrets = require('./secrets')
 const crypto = require('ara-crypto')
+const debug = require('debug')('ara:network:secrets')
+const pify = require('pify')
+const rc = require('./rc')()
+const fs = require('fs')
 
 const DISCOVERY = 0
 const NETWORK = 1
@@ -9,6 +15,8 @@ const CLIENT = 3
 
 const PKX = Buffer.from('PKX') // public keystore header
 const SKX = Buffer.from('SKX') // secret keystore header
+
+const toHex = (b) => b && b.toString('hex')
 
 /**
  * Creates a network secrets document containing
@@ -22,17 +30,14 @@ const SKX = Buffer.from('SKX') // secret keystore header
  * @return {Object}
  */
 function encrypt(opts) {
-  const freelist = []
   const keys = {}
 
-  const result = {
-    public: {},
-    secret: {},
+  if (null == opts || 'object' != typeof opts) {
+    throw new TypeError("encrypt: Expecting object.")
   }
 
-  if (null == opts || 'object' != typeof opts) {
-    opts = {}
-    opts.key = alloc(crypto.randomBytes(32))
+  if (false == Buffer.isBuffer(opts.key) && 'string' != typeof opts.key) {
+    throw new TypeError("encrypt: Expecting buffer or string as key.")
   }
 
   keys.discoveryKey = crypto.discoveryKey(crypto.randomBytes(32))
@@ -40,6 +45,28 @@ function encrypt(opts) {
   keys.client = crypto.keyPair(seed('client'))
   keys.network = crypto.keyPair(networkSeed(keys.client, keys.remote))
 
+  return pack(keys, opts)
+
+
+  function networkSeed(client, remote) {
+    return Buffer.concat([
+      remote.secretKey.slice(-16),
+      client.secretKey.slice(0, 16),
+    ])
+  }
+
+  function seed(prefix) {
+    if (opts.seed) {
+      const buffer = Buffer.allocUnsafe(32)
+      buffer.fill(prefix + opts.seed)
+      return buffer
+    }
+  }
+}
+
+function pack(keys, opts) {
+  const freelist = []
+  const result = { public: {}, secret: {} }
   const keystores = {
     public: [ // 163 = 3 + 32 + 32 + 32 + 64
       PKX,
@@ -69,12 +96,11 @@ function encrypt(opts) {
   }
 
   const iv = alloc(crypto.randomBytes(16))
-
   const digest = alloc(crypto.blake2b(Buffer.concat(freelist)))
 
   result.public.discoveryKey = keys.discoveryKey.toString('hex')
-  result.public.keystore = crypto.encrypt(buffers.public, {key, iv})
   result.public.digest = digest.toString('hex')
+  result.public.keystore = crypto.encrypt(buffers.public, {key, iv})
 
   result.secret.discoveryKey = keys.discoveryKey.toString('hex')
   result.secret.keystore = crypto.encrypt(buffers.secret, {key, iv})
@@ -105,21 +131,6 @@ function encrypt(opts) {
   function free() {
     let buffer = null
     while (buffer = freelist.shift()) { buffer.fill(0) }
-  }
-
-  function networkSeed(client, remote) {
-    return alloc(Buffer.concat([
-      remote.secretKey.slice(-16),
-      client.secretKey.slice(0, 16),
-    ]))
-  }
-
-  function seed(prefix) {
-    if (opts.seed) {
-      const buffer = alloc(32)
-      buffer.fill(prefix + opts.seed)
-      return buffer
-    }
   }
 }
 
@@ -195,7 +206,70 @@ function decrypt(doc, opts) {
   }
 }
 
+/**
+ * Load secrets by name from the secrets root directory.
+ * Secrets are indexed by the blake2b hash of their value.
+ * @public
+ * @param {Object} opts
+ * @return {Object}
+ */
+async function load(opts) {
+  if (null == opts || 'object' != typeof opts) {
+    throw new TypeError("load: Expecting object.")
+  }
+
+  if (false == Buffer.isBuffer(opts.key) && 'string' != typeof opts.key) {
+    throw new TypeError("load: Expecting key to be a buffer or string.")
+  }
+
+  const key = crypto.blake2b(Buffer.from(opts.key)).toString('hex')
+  const paths = { public: null, secret: null }
+  const result = { public: null, secret: null }
+  paths.secret = resolve(opts.root || rc.network.secrets.root, key)
+  paths.public = paths.secret + '.pub'
+
+  if (false !== opts.public) {
+    try {
+      await pify(fs.access)(paths.public)
+      result.public = await pify(fs.readFile)(paths.public, 'utf8')
+      result.public = JSON.parse(result.public)
+    } catch (err) { debug(err) }
+  }
+
+  if (true !== opts.public) {
+    try {
+      await pify(fs.access)(paths.secret)
+      result.secret = await pify(fs.readFile)(paths.secret, 'utf8')
+      result.secret = JSON.parse(result.secret)
+    } catch (err) {
+      debug(err)
+    }
+  }
+
+  return result
+}
+
+/**
+ * Derive a resolution document from a secret containing
+ * public and secret keys if available.
+ * @public
+ * @param {Object} secret
+ * @param {Object} opts
+ * @return {Object}
+ */
+function derive(secret, opts) {
+  const doc = decrypt(secret, opts)
+  const result = { public: null, secret: null, }
+  if (doc.remote.secretKey) {
+    return { secret }
+  } else {
+    return { public: secret }
+  }
+}
+
 module.exports = {
   encrypt,
   decrypt,
+  derive,
+  load,
 }
