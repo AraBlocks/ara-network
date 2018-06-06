@@ -13,10 +13,10 @@ class Handshake {
 
     const { remote, client, network, discoveryKey } = opts
 
+    this.discoveryKey = discoveryKey
+    this.network = network
     this.remote = remote
     this.client = client
-    this.network = network
-    this.discoveryKey = discoveryKey
   }
 
   iv() {
@@ -30,6 +30,8 @@ class Handshake {
   digest() {
     const buffers = []
     buffers.push(this.discoveryKey)
+    buffers.push(this.network.publicKey)
+    buffers.push(this.remote.publicKey)
     buffers.push(this.client.secretKey)
     return crypto.blake2b(Buffer.concat(buffers))
   }
