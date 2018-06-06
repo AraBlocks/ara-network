@@ -85,11 +85,11 @@ function pack(keys, opts) {
     ],
   }
 
-  const key = alloc(16,
-    crypto.blake2b(Buffer.isBuffer(opts.key)
-      ? opts.key
-      : Buffer.from(opts.key)))
+  if (false == Buffer.isBuffer(opts.key)) {
+    opts.key = Buffer(opts.key)
+  }
 
+  const key = alloc(crypto.blake2b(opts.key, 16))
   const buffers = {
     public: alloc(Buffer.concat(keystores.public)),
     secret: alloc(Buffer.concat(keystores.secret)),
@@ -155,10 +155,11 @@ function pack(keys, opts) {
  * @return {Object}
  */
 function decrypt(doc, opts) {
-  const key = crypto.blake2b(Buffer.isBuffer(opts.key)
-    ? opts.key
-    : Buffer.from(opts.key)).slice(0, 16)
+  if (false == Buffer.isBuffer(opts.key)) {
+    opts.key = Buffer(opts.key)
+  }
 
+  const key = crypto.blake2b(opts.key, 16)
   const buffer = crypto.decrypt(doc.keystore, Object.assign({}, opts, {key}))
   const offset = 3 // for header
   const header = read(0, offset)
@@ -222,7 +223,7 @@ async function load(opts) {
     throw new TypeError("load: Expecting key to be a buffer or string.")
   }
 
-  const key = crypto.blake2b(Buffer.from(opts.key)).toString('hex')
+  const key = crypto.blake2b(Buffer.from(opts.key), 16).toString('hex')
   const paths = { public: null, secret: null }
   const result = { public: null, secret: null }
   paths.secret = resolve(opts.root || rc.network.secrets.root, key)
