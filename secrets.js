@@ -18,6 +18,22 @@ const SKX = Buffer.from('SKX') // secret keystore header
 
 const toHex = (b) => b && b.toString('hex')
 
+function ensureKeyPair(keyPair) {
+  if ('publicKey' in keyPair && 'secretKey' in keyPair) {
+    return keyPair
+  } else if (Buffer.isBuffer(keyPair) && 64 == keyPair.length) {
+    const publicKey = keyPair.slice(32)
+    const secretKey = keyPair
+    return { publicKey, secretKey }
+  } else if (Buffer.isBuffer(keyPair) && 32 == keyPair.length) {
+    const publicKey = keyPair
+    const secretKey = null
+    return { publicKey, secretKey }
+  } else {
+    return null
+  }
+}
+
 /**
  * Creates a network secrets document containing
  * a keystore and discovery key. The keystore stores
@@ -40,14 +56,28 @@ function encrypt(opts) {
     throw new TypeError("encrypt: Expecting buffer or string as key.")
   }
 
-  keys.discoveryKey = crypto.discoveryKey(crypto.randomBytes(32))
-  keys.remote = opts.remote || crypto.keyPair(seed('remote'))
-  keys.client = opts.client || crypto.keyPair(seed('client'))
-  keys.network = crypto.keyPair(networkSeed(keys.client, keys.remote))
+  // use given remote + client keys, or generate
+  keys.remote = ensureKeyPair(opts.remote || crypto.keyPair(seed('remote')))
+  keys.client = ensureKeyPair(opts.client || crypto.keyPair(seed('client')))
 
+  if (null == keys.remote || null == keys.remote.secretKey) {
+    throw new TypeError("encrypt: Expecting remote secret key.")
+  }
+
+  if (null == keys.client || null == keys.client.secretKey) {
+    throw new TypeError("encrypt: Expecting client secret key.")
+  }
+
+  // network seed depends on remote + client key pairs
+  keys.network = crypto.keyPair(networkSeed(keys.remote, keys.client))
+
+  // discovery keys are unique per generation
+  keys.discoveryKey = crypto.discoveryKey(crypto.randomBytes(32))
+
+  // encrypt and pack keys into document
   return pack(keys, opts)
 
-  function networkSeed(client, remote) {
+  function networkSeed(remote, client) {
     return Buffer.concat([
       remote.secretKey.slice(-16),
       client.secretKey.slice(0, 16),
@@ -55,11 +85,14 @@ function encrypt(opts) {
   }
 
   function seed(prefix) {
+    const buffer = Buffer.allocUnsafe(32)
+    prefix = Buffer.from(prefix)
     if (opts.seed) {
-      const buffer = Buffer.allocUnsafe(32)
-      buffer.fill(prefix + opts.seed)
-      return buffer
+      buffer.fill(Buffer.concat([prefix, opts.seed]))
+    } else {
+      buffer.fill(Buffer.concat([prefix, crypto.randomBytes(32 - prefix.length)]))
     }
+    return buffer
   }
 }
 
