@@ -41,12 +41,11 @@ function encrypt(opts) {
   }
 
   keys.discoveryKey = crypto.discoveryKey(crypto.randomBytes(32))
-  keys.remote = crypto.keyPair(seed('remote'))
-  keys.client = crypto.keyPair(seed('client'))
+  keys.remote = opts.remote || crypto.keyPair(seed('remote'))
+  keys.client = opts.client || crypto.keyPair(seed('client'))
   keys.network = crypto.keyPair(networkSeed(keys.client, keys.remote))
 
   return pack(keys, opts)
-
 
   function networkSeed(client, remote) {
     return Buffer.concat([
