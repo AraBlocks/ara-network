@@ -39,8 +39,10 @@ if (null == module.parent) {
 
 /**
  * Main program entry
+ *
  * @public
  */
+
 async function main() {
   const { t, type = t } = program.argv
   const { V, version = V } = program.argv
@@ -86,11 +88,15 @@ async function main() {
 
 /**
  * Fork process and boot worker node.
+ *
  * @public
+ *
  * @param {Object} opts
  * @param {Object} opts.type
+ *
  * @return {cluster.Worker}
  */
+
 async function boot({type}) {
   const env = process.env
   const cwd = process.cwd()
@@ -111,6 +117,7 @@ async function boot({type}) {
 /**
  * Configures program usage
  */
+
 function help() {
   program
     .help(true)
@@ -125,9 +132,12 @@ function help() {
 
 /**
  * Worker message callback
+ *
  * @private
+ *
  * @param {Object} event
  */
+
 async function onmessage({id, type}) {
   let node = null
   const boot = (paths) =>  {
@@ -141,6 +151,7 @@ async function onmessage({id, type}) {
     }
   }
 
+  // Different places to search for the corresponding node
   boot([
     `../nodes/${type}`,
     `ara-network-node-${type}`,
@@ -218,9 +229,12 @@ async function onmessage({id, type}) {
 
 /**
  * Handles fatal errors.
+ *
  * @private
+ *
  * @param {Error} err
  */
+
 function onfatal(err) {
   debug(err)
   error("fatal:", err.message)
