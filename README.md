@@ -71,6 +71,9 @@ ans -r localresolver
 ```
 ## Contributing
 
+[How to contribute](/CONTRIBUTING.md)
+[Commit message format](/COMMIT_FORMAT.md)
+
 ## See Also
 
 [ara-network-node-dht](https://github.com/arablocks/ara-network-node-dht)
