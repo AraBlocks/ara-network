@@ -1,6 +1,8 @@
 ara-network
 ===========
 
+[![Build Status](https://travis-ci.com/AraBlocks/ara-network.svg?token=r6p7pesHZ9MRJsVsrYFe&branch=master)](https://travis-ci.com/AraBlocks/ara-network)
+
 Tools for launching nodes that interact with the _ARA Network_.
 
 ## Installation
