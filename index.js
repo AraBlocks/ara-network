@@ -1,4 +1,4 @@
-'use strict'
+
 
 const { Handshake } = require('./secret-handshake')
 const discovery = require('./discovery')

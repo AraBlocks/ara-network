@@ -1,7 +1,4 @@
-'use strict'
-
 const { resolve } = require('path')
-const secrets = require('./secrets')
 const crypto = require('ara-crypto')
 const debug = require('debug')('ara:network:secrets')
 const pify = require('pify')
@@ -13,25 +10,24 @@ const NETWORK = 1
 const REMOTE = 2
 const CLIENT = 3
 
-const PKX = Buffer.from('PKX')  // public keystore header
-const SKX = Buffer.from('SKX')  // secret keystore header
-
-const toHex = (b) => b && b.toString('hex')
+// public keystore header
+const PKX = Buffer.from('PKX')
+// secret keystore header
+const SKX = Buffer.from('SKX')
 
 function ensureKeyPair(keyPair) {
   if ('publicKey' in keyPair && 'secretKey' in keyPair) {
     return keyPair
-  } else if (Buffer.isBuffer(keyPair) && 64 == keyPair.length) {
+  } else if (Buffer.isBuffer(keyPair) && keyPair.length == 64) {
     const publicKey = keyPair.slice(32)
     const secretKey = keyPair
     return { publicKey, secretKey }
-  } else if (Buffer.isBuffer(keyPair) && 32 == keyPair.length) {
+  } else if (Buffer.isBuffer(keyPair) && keyPair.length == 32) {
     const publicKey = keyPair
     const secretKey = null
     return { publicKey, secretKey }
-  } else {
-    return null
   }
+  return null
 }
 
 /**
@@ -52,24 +48,24 @@ function ensureKeyPair(keyPair) {
 function encrypt(opts) {
   const keys = {}
 
-  if (null == opts || 'object' != typeof opts) {
-    throw new TypeError("encrypt: Expecting object.")
+  if (opts == null || typeof opts !== 'object') {
+    throw new TypeError('encrypt: Expecting object.')
   }
 
-  if (false == Buffer.isBuffer(opts.key) && 'string' != typeof opts.key) {
-    throw new TypeError("encrypt: Expecting buffer or string as key.")
+  if (Buffer.isBuffer(opts.key) == false && typeof opts.key !== 'string') {
+    throw new TypeError('encrypt: Expecting buffer or string as key.')
   }
 
   // use given remote + client keys, or generate
   keys.remote = ensureKeyPair(opts.remote || crypto.keyPair(seed('remote')))
   keys.client = ensureKeyPair(opts.client || crypto.keyPair(seed('client')))
 
-  if (null == keys.remote || null == keys.remote.secretKey) {
-    throw new TypeError("encrypt: Expecting remote secret key.")
+  if (keys.remote == null || keys.remote.secretKey == null) {
+    throw new TypeError('encrypt: Expecting remote secret key.')
   }
 
-  if (null == keys.client || null == keys.client.secretKey) {
-    throw new TypeError("encrypt: Expecting client secret key.")
+  if (keys.client == null || keys.client.secretKey == null) {
+    throw new TypeError('encrypt: Expecting client secret key.')
   }
 
   // network seed depends on remote + client key pairs
@@ -119,6 +115,7 @@ function encrypt(opts) {
 function pack(keys, opts) {
   const freelist = []
   const result = { public: {}, secret: {} }
+  /* eslint-disable no-inline-comments */
   const keystores = {
     public: [ // 163 = 3 + 32 + 32 + 32 + 64
       PKX,
@@ -136,9 +133,10 @@ function pack(keys, opts) {
       keys.client.secretKey, // 64
     ],
   }
+  /* eslint-enable no-inline-comments */
 
-  if (false == Buffer.isBuffer(opts.key)) {
-    opts.key = Buffer(opts.key)
+  if (Buffer.isBuffer(opts.key) == false) {
+    opts.key = Buffer.from(opts.key)
   }
 
   const key = alloc(crypto.blake2b(opts.key, 16))
@@ -152,15 +150,15 @@ function pack(keys, opts) {
 
   result.public.discoveryKey = keys.discoveryKey.toString('hex')
   result.public.digest = digest.toString('hex')
-  result.public.keystore = crypto.encrypt(buffers.public, {key, iv})
+  result.public.keystore = crypto.encrypt(buffers.public, { key, iv })
 
   result.secret.discoveryKey = keys.discoveryKey.toString('hex')
-  result.secret.keystore = crypto.encrypt(buffers.secret, {key, iv})
+  result.secret.keystore = crypto.encrypt(buffers.secret, { key, iv })
   result.secret.digest = digest.toString('hex')
 
   free()
 
-  for (const k in keys) {
+  for (const k in Object.keys(keys)) {
     if ('publicKey' in keys[k]) {
       keys[k].publicKey.fill(0)
     }
@@ -203,7 +201,9 @@ function pack(keys, opts) {
   function free() {
     let buffer = null
 
+    /* eslint-disable no-cond-assign */
     while (buffer = freelist.shift()) buffer.fill(0)
+    /* eslint-enable no-cond-assign */
   }
 }
 
@@ -231,13 +231,14 @@ function pack(keys, opts) {
  */
 
 function decrypt(doc, opts) {
-  if (false == Buffer.isBuffer(opts.key)) {
-    opts.key = Buffer(opts.key)
+  if (Buffer.isBuffer(opts.key) == false) {
+    opts.key = Buffer.from(opts.key)
   }
 
   const key = crypto.blake2b(opts.key, 16)
-  const buffer = crypto.decrypt(doc.keystore, Object.assign({}, opts, {key}))
-  const offset = 3 // for header
+  const buffer = crypto.decrypt(doc.keystore, Object.assign({}, opts, { key }))
+  // for header
+  const offset = 3
   const header = read(0, offset)
   const keys = {
     discoveryKey: null,
@@ -248,9 +249,8 @@ function decrypt(doc, opts) {
 
   keys.discoveryKey = read(offset + DISCOVERY, 32)
 
-  if (0 == Buffer.compare(PKX, header)) {
+  if (Buffer.compare(PKX, header) == 0) {
     const shift = offset
-    const size = 32
 
     // parse keys
     keys.network.publicKey = read((NETWORK * 32) + shift, 32)
@@ -259,7 +259,7 @@ function decrypt(doc, opts) {
 
     // derive public key
     keys.client.publicKey = keys.client.secretKey.slice(32)
-  } else if (0 == Buffer.compare(SKX, header)) {
+  } else if (Buffer.compare(SKX, header) == 0) {
     const shift = offset - keys.discoveryKey.length
     const size = 64
 
@@ -273,13 +273,13 @@ function decrypt(doc, opts) {
     keys.remote.publicKey = keys.remote.secretKey.slice(32)
     keys.client.publicKey = keys.client.secretKey.slice(32)
   } else {
-    throw new TypeError("Malformed secrets keystore buffer.")
+    throw new TypeError('Malformed secrets keystore buffer.')
   }
 
   return keys
 
-  function read(offset, length) {
-    return buffer.slice(offset, offset + length)
+  function read(readOffset, length) {
+    return buffer.slice(readOffset, readOffset + length)
   }
 }
 
@@ -295,21 +295,21 @@ function decrypt(doc, opts) {
  */
 
 async function load(opts) {
-  if (null == opts || 'object' != typeof opts) {
-    throw new TypeError("load: Expecting object.")
+  if (opts == null || typeof opts !== 'object') {
+    throw new TypeError('load: Expecting object.')
   }
 
-  if (false == Buffer.isBuffer(opts.key) && 'string' != typeof opts.key) {
-    throw new TypeError("load: Expecting key to be a buffer or string.")
+  if (Buffer.isBuffer(opts.key) == false && typeof opts.key !== 'string') {
+    throw new TypeError('load: Expecting key to be a buffer or string.')
   }
 
   const key = crypto.blake2b(Buffer.from(opts.key), 16).toString('hex')
   const paths = { public: null, secret: null }
   const result = { public: null, secret: null }
   paths.secret = resolve(opts.root || rc.network.secrets.root, key)
-  paths.public = paths.secret + '.pub'
+  paths.public = `${paths.secret}.pub`
 
-  if (false !== opts.public) {
+  if (opts.public !== false) {
     try {
       await pify(fs.access)(paths.public)
       result.public = await pify(fs.readFile)(paths.public, 'utf8')
@@ -317,7 +317,7 @@ async function load(opts) {
     } catch (err) { debug(err) }
   }
 
-  if (true !== opts.public) {
+  if (opts.public !== true) {
     try {
       await pify(fs.access)(paths.secret)
       result.secret = await pify(fs.readFile)(paths.secret, 'utf8')
@@ -344,12 +344,12 @@ async function load(opts) {
 
 function derive(secret, opts) {
   const doc = decrypt(secret, opts)
-  const result = { public: null, secret: null, }
+
   if (doc.remote.secretKey) {
     return { secret }
-  } else {
-    return { public: secret }
   }
+
+  return { public: secret }
 }
 
 module.exports = {

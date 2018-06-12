@@ -1,5 +1,5 @@
-'use strict'
-
+const { defaults: dnsDefaults } = require('../dns')
+const { defaults: dhtDefaults } = require('../dht')
 const discovery = require('discovery-swarm')
 const extend = require('extend')
 const crypto = require('ara-crypto')
@@ -9,8 +9,8 @@ const defaults = {
   hash: false,
   utp: true,
   tcp: true,
-  dns: require('../dns').defaults,
-  dht: require('../dht').defaults,
+  dns: dnsDefaults,
+  dht: dhtDefaults,
 
   get id() {
     return crypto.randomBytes(32)
@@ -26,7 +26,8 @@ const defaults = {
  * @return {Object}
  */
 function createSwarm(opts) {
-  if (null == opts || 'object' != typeof opts) { opts = {} }
+  if (opts == null || typeof opts !== 'object') { opts = {} }
+  debug('creating swarm')
   opts = extend(true, {}, defaults, opts)
   const server = discovery(opts)
   return server
