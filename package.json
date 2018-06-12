@@ -10,7 +10,9 @@
     "ans": "bin/ara-network-secrets"
   },
   "scripts": {
-    "test": "ava test"
+    "test": "ava test",
+    "lint": "eslint .",
+    "lint-fix": "eslint . --fix"
   },
   "repository": {
     "type": "git",
@@ -49,6 +51,9 @@
     "yargs": "^11.0.0"
   },
   "devDependencies": {
-    "ava": "^0.25.0"
+    "ava": "^0.25.0",
+    "eslint": "^4.19.1",
+    "eslint-config-littlstar": "github:littlstar/eslint-config-littlstar",
+    "eslint-plugin-import": "^2.12.0"
   }
 }
