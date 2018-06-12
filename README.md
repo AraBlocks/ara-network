@@ -1,3 +1,4 @@
+
 ara-network
 ===========
 
@@ -65,7 +66,7 @@ $ ans --export -k localresolver --public -o ~/.ssh/resolver.pub
 $ ans -k localresolver
 ```
 
-Removes a key named `localresolver`
+*Removes a key named `localresolver`*
 ```bash
 ans -r localresolver
 ```
