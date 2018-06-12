@@ -17,7 +17,7 @@ $ npm install ara-network
 
 Launches nodes that interact with _ARA Network_
 
-#### Examples
+#### Usage
 
 ```sh
 $ ann -h (help)
@@ -26,7 +26,7 @@ $ ann -t . (launch node in current directory)
 $ ann -t <relative path> (launch node by relative path)
 ```
 
-#### Usage
+#### Examples
 
 *Launch ara-network-node-dht*
 ```bash
@@ -37,9 +37,9 @@ $ ann -t dht
 
 #### Description
 
-Import, export or create keystores
+Manage ARA keystores
 
-#### Examples
+#### Usage
 
 ```sh
 $ ans -h (help)
@@ -48,7 +48,7 @@ $ ans --import -k <name> <path> (import key)
 $ ans --export -k <name> [--public] [-o <output path>] (export key)
 ```
 
-#### Usage
+#### Examples
 
 *Import the key stored in `./resolver.pub` as `localresolver`*
 ```bash
