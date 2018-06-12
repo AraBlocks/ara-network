@@ -13,14 +13,18 @@ const defaults = {
 
 /**
  * Create a DNS discovery server
+ *
  * @public
- * @param {?(Object)} opts
- * @param {?(Boolean)} [opts.multicast = true]
- * @param {?(Boolean)} [opts.loopback = true]
- * @param {?(String)} [opts.domain = 'ara.local']
- * @param {?(Number)} [opts.limit = 10000]
+ *
+ * @param {Object} opts
+ * @param {Boolean} [opts.multicast = true]
+ * @param {Boolean} [opts.loopback = true]
+ * @param {String} [opts.domain = 'ara.local']
+ * @param {Number} [opts.limit = 10000]
+ *
  * @return {Object}
  */
+
 function createServer(opts) {
   if (!opts || 'object' != typeof opts) { opts = {} }
   opts = extend(true, {}, defaults, opts)

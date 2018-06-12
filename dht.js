@@ -16,10 +16,14 @@ const defaults = {
 
 /**
   * Create a BitTorrent DHT server.
+  *
   * @public
-  * @param {?(Object)} opts
+  *
+  * @param {Object} [opts = {}]
+  *
   * @return {Object}
   */
+
 function createServer(opts) {
   if (!opts || 'object' != typeof opts) { opts = {} }
   opts = extend(true, {}, defaults, opts)
@@ -29,10 +33,14 @@ function createServer(opts) {
 
 /**
  * Create a BitTorrent DHT client.
+ *
   * @public
-  * @param {?(Object)} opts
+  *
+  * @param {[Object]} opts
+  *
   * @return {Object}
  */
+
 function createClient(opts) {
   if (!opts || 'object' != typeof opts) { opts = {} }
   opts = extend(true, {}, defaults, opts)
