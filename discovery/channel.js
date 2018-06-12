@@ -1,5 +1,5 @@
-'use strict'
-
+const { defaults: dnsDefaults } = require('../dns')
+const { defaults: dhtDefaults } = require('../dht')
 const discovery = require('discovery-channel')
 const extend = require('extend')
 const crypto = require('ara-crypto')
@@ -7,8 +7,8 @@ const debug = require('debug')('ara:network:channel')
 
 const defaults = {
   hash: false,
-  dns: require('../dns').defaults,
-  dht: require('../dht').defaults,
+  dns: dnsDefaults,
+  dht: dhtDefaults,
 
   get id() {
     return crypto.randomBytes(32)
@@ -23,9 +23,9 @@ const defaults = {
  * @return {Object}
  */
 function createChannel(opts) {
-  if (null == opts || 'object' != typeof opts) { opts = {} }
+  if (opts == null || typeof opts !== 'object') { opts = {} }
+  debug('creating channel')
   opts = extend(true, {}, defaults, opts)
-  console.log(opts);
   const channel = discovery(opts)
   return channel
 }

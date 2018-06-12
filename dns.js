@@ -1,4 +1,4 @@
-'use strict'
+
 
 const discovery = require('dns-discovery')
 const extend = require('extend')
@@ -26,7 +26,8 @@ const defaults = {
  */
 
 function createServer(opts) {
-  if (!opts || 'object' != typeof opts) { opts = {} }
+  if (!opts || typeof opts !== 'object') { opts = {} }
+  debug('creating server')
   opts = extend(true, {}, defaults, opts)
   const server = discovery(opts)
   return server

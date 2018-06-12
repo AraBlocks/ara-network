@@ -1,22 +1,22 @@
-'use strict'
-
 const isBuffer = require('is-buffer')
-const secrets = require('./secrets')
 const crypto = require('ara-crypto')
 const debug = require('debug')('ara:network:secret-handshake')
 
 class Handshake {
   constructor(opts) {
-    if (null == opts || 'object' != typeof opts) {
-      throw new TypeError("Handshake: Expecting object.")
+    if (opts == null || typeof opts !== 'object') {
+      throw new TypeError('Handshake: Expecting object.')
     }
 
-    const { remote, client, network, discoveryKey } = opts
+    const {
+      remote, client, network, discoveryKey
+    } = opts
 
     this.discoveryKey = discoveryKey
     this.network = network
     this.remote = remote
     this.client = client
+    this.crypto = crypto
   }
 
   /**
@@ -27,7 +27,7 @@ class Handshake {
    */
 
   iv() {
-    return crypto.randomBytes(16)
+    return this.crypto.randomBytes(16)
   }
 
   /**
@@ -65,7 +65,7 @@ class Handshake {
     const iv = this.iv()
     const key = this.key()
     const digest = this.digest()
-    const challenge = crypto.encrypt(digest, {key, iv})
+    const challenge = crypto.encrypt(digest, { key, iv })
     return Buffer.from(JSON.stringify(challenge), 'utf8')
   }
 
@@ -78,8 +78,7 @@ class Handshake {
    */
   proof(challenge) {
     if (isBuffer(challenge)) {
-      try { challenge = JSON.parse(challenge.toString('utf8')) }
-      catch (err) {
+      try { challenge = JSON.parse(challenge.toString('utf8')) } catch (err) {
         debug(err)
         return false
       }
@@ -88,8 +87,8 @@ class Handshake {
     try {
       const key = this.key()
       const digest = this.digest()
-      const proof = crypto.decrypt(challenge, {key})
-      if (0 == Buffer.compare(digest, proof)) {
+      const proof = crypto.decrypt(challenge, { key })
+      if (Buffer.compare(digest, proof) == 0) {
         return true
       }
     } catch (err) {

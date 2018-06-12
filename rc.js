@@ -1,4 +1,4 @@
-'use strict'
+
 
 const { resolve } = require('path')
 const extend = require('extend')
@@ -12,4 +12,4 @@ const defaults = () => ({
   }
 })
 
-module.exports = (conf) => rc(extend(true, {}, defaults(), conf))
+module.exports = conf => rc(extend(true, {}, defaults(), conf))
