@@ -6,7 +6,7 @@ Tools for launching nodes that interact with the _ARA Network_.
 
 ## Installation
 
-```sh
+```bash
 $ npm install ara-network
 ```
 
@@ -20,7 +20,7 @@ Launches nodes that interact with _ARA Network_
 
 #### Usage
 
-```sh
+```bash
 $ ann -h (help)
 $ ann -t <name after 'ara-network-node'> (launch node by name)
 $ ann -t . (launch node in current directory)
@@ -42,7 +42,7 @@ Manage ARA keystores
 
 #### Usage
 
-```sh
+```bash
 $ ans -h (help)
 $ ans -k <name> (create key)
 $ ans --import -k <name> <path> (import key)
