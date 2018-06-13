@@ -10,7 +10,7 @@
     "ans": "bin/ara-network-secrets"
   },
   "scripts": {
-    "test": ":",
+    "test": "ava test",
     "lint": "eslint .",
     "lint-fix": "eslint . --fix"
   },
@@ -53,7 +53,8 @@
   "devDependencies": {
     "ava": "^0.25.0",
     "eslint": "^4.19.1",
-    "eslint-config-ara": "github:arablocks/eslint-config-ara",
-    "eslint-plugin-import": "^2.12.0"
+    "eslint-config-littlstar": "github:littlstar/eslint-config-littlstar",
+    "eslint-plugin-import": "^2.12.0",
+    "sinon": "^6.0.0"
   }
 }
