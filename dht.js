@@ -23,7 +23,7 @@ const defaults = {
  */
 
 function createServer(opts) {
-  if (!opts || typeof opts !== 'object') { opts = {} }
+  if (!opts || 'object' !== typeof opts) { opts = {} }
   debug('creating server')
   opts = extend(true, {}, defaults, opts)
   const server = new BitTorrentDHT(opts)
@@ -41,7 +41,7 @@ function createServer(opts) {
  */
 
 function createClient(opts) {
-  if (!opts || typeof opts !== 'object') { opts = {} }
+  if (!opts || 'object' !== typeof opts) { opts = {} }
   debug('creating client')
   opts = extend(true, {}, defaults, opts)
   const client = new BitTorrentDHT(opts)

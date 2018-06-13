@@ -23,7 +23,7 @@ const defaults = {
  * @return {Object}
  */
 function createChannel(opts) {
-  if (opts == null || typeof opts !== 'object') { opts = {} }
+  if (null == opts || 'object' !== typeof opts) { opts = {} }
   debug('creating channel')
   opts = extend(true, {}, defaults, opts)
   const channel = discovery(opts)

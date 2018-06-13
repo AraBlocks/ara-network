@@ -26,7 +26,7 @@ const defaults = {
  * @return {Object}
  */
 function createSwarm(opts) {
-  if (opts == null || typeof opts !== 'object') { opts = {} }
+  if (null == opts || 'object' !== typeof opts) { opts = {} }
   debug('creating swarm')
   opts = extend(true, {}, defaults, opts)
   const server = discovery(opts)
