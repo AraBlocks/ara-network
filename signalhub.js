@@ -1,5 +1,3 @@
-
-
 const Server = require('signalhub/server')
 
 /**

@@ -1,5 +1,3 @@
-
-
 const BitTorrentDHT = require('bittorrent-dht')
 const crypto = require('ara-crypto')
 const extend = require('extend')
