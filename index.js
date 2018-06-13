@@ -1,5 +1,3 @@
-
-
 const { Handshake } = require('./secret-handshake')
 const discovery = require('./discovery')
 const signalhub = require('./signalhub')
