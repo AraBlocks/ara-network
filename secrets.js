@@ -18,11 +18,11 @@ const SKX = Buffer.from('SKX')
 function ensureKeyPair(keyPair) {
   if ('publicKey' in keyPair && 'secretKey' in keyPair) {
     return keyPair
-  } else if (Buffer.isBuffer(keyPair) && keyPair.length == 64) {
+  } else if (Buffer.isBuffer(keyPair) && 64 == keyPair.length) {
     const publicKey = keyPair.slice(32)
     const secretKey = keyPair
     return { publicKey, secretKey }
-  } else if (Buffer.isBuffer(keyPair) && keyPair.length == 32) {
+  } else if (Buffer.isBuffer(keyPair) && 32 == keyPair.length) {
     const publicKey = keyPair
     const secretKey = null
     return { publicKey, secretKey }
@@ -48,11 +48,11 @@ function ensureKeyPair(keyPair) {
 function encrypt(opts) {
   const keys = {}
 
-  if (opts == null || typeof opts !== 'object') {
+  if (null == opts || 'object' != typeof opts) {
     throw new TypeError('encrypt: Expecting object.')
   }
 
-  if (Buffer.isBuffer(opts.key) == false && typeof opts.key !== 'string') {
+  if (false == Buffer.isBuffer(opts.key) && 'string' != typeof opts.key) {
     throw new TypeError('encrypt: Expecting buffer or string as key.')
   }
 
@@ -60,11 +60,11 @@ function encrypt(opts) {
   keys.remote = ensureKeyPair(opts.remote || crypto.keyPair(seed('remote')))
   keys.client = ensureKeyPair(opts.client || crypto.keyPair(seed('client')))
 
-  if (keys.remote == null || keys.remote.secretKey == null) {
+  if (null == keys.remote || null == keys.remote.secretKey) {
     throw new TypeError('encrypt: Expecting remote secret key.')
   }
 
-  if (keys.client == null || keys.client.secretKey == null) {
+  if (null == keys.client || null == keys.client.secretKey) {
     throw new TypeError('encrypt: Expecting client secret key.')
   }
 
@@ -135,7 +135,7 @@ function pack(keys, opts) {
   }
   /* eslint-enable no-inline-comments */
 
-  if (Buffer.isBuffer(opts.key) == false) {
+  if (false == Buffer.isBuffer(opts.key)) {
     opts.key = Buffer.from(opts.key)
   }
 
@@ -231,7 +231,7 @@ function pack(keys, opts) {
  */
 
 function decrypt(doc, opts) {
-  if (Buffer.isBuffer(opts.key) == false) {
+  if (false == Buffer.isBuffer(opts.key)) {
     opts.key = Buffer.from(opts.key)
   }
 
@@ -249,7 +249,7 @@ function decrypt(doc, opts) {
 
   keys.discoveryKey = read(offset + DISCOVERY, 32)
 
-  if (Buffer.compare(PKX, header) == 0) {
+  if (0 == Buffer.compare(PKX, header)) {
     const shift = offset
 
     // parse keys
@@ -259,7 +259,7 @@ function decrypt(doc, opts) {
 
     // derive public key
     keys.client.publicKey = keys.client.secretKey.slice(32)
-  } else if (Buffer.compare(SKX, header) == 0) {
+  } else if (0 == Buffer.compare(SKX, header)) {
     const shift = offset - keys.discoveryKey.length
     const size = 64
 
@@ -295,11 +295,11 @@ function decrypt(doc, opts) {
  */
 
 async function load(opts) {
-  if (opts == null || typeof opts !== 'object') {
+  if (null == opts || 'object' != typeof opts) {
     throw new TypeError('load: Expecting object.')
   }
 
-  if (Buffer.isBuffer(opts.key) == false && typeof opts.key !== 'string') {
+  if (false == Buffer.isBuffer(opts.key) && 'string' != typeof opts.key) {
     throw new TypeError('load: Expecting key to be a buffer or string.')
   }
 
@@ -309,7 +309,7 @@ async function load(opts) {
   paths.secret = resolve(opts.root || rc.network.secrets.root, key)
   paths.public = `${paths.secret}.pub`
 
-  if (opts.public !== false) {
+  if (false !== opts.public) {
     try {
       await pify(fs.access)(paths.public)
       result.public = await pify(fs.readFile)(paths.public, 'utf8')
@@ -317,7 +317,7 @@ async function load(opts) {
     } catch (err) { debug(err) }
   }
 
-  if (opts.public !== true) {
+  if (true !== opts.public) {
     try {
       await pify(fs.access)(paths.secret)
       result.secret = await pify(fs.readFile)(paths.secret, 'utf8')
