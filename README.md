@@ -12,13 +12,11 @@ This project is still in alpha development.
 - [Node](https://nodejs.org/en/download/) 
 
 ## Installation
-
 ```bash
-$ npm install ara-network
+$ npm install ara-network && npm link
 ```
 
 ## API
-
 ### `ara-network-node(1)`
 
 Launches nodes that interact with _ARA Network_.
@@ -33,18 +31,15 @@ $ ann -t <relative path> (launch node by relative path)
 ```
 
 #### Example
-
 *Launch ara-network-node-dht*
 ```bash
 $ ann -t dht
 ```
 
 ### `ara-network-secrets(1)`
-
 Manage ARA keystores.
 
 #### Usage
-
 ```bash
 $ ans -h (help)
 $ ans -k <name> (create key)
@@ -53,7 +48,6 @@ $ ans --export -k <name> [--public] [-o <output path>] (export key)
 ```
 
 #### Examples
-
 *Import the key stored in `./resolver.pub` as `localresolver`*
 ```bash
 $ ans --import -k localresolver ./resolver.pub
