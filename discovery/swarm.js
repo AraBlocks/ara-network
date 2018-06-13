@@ -21,10 +21,14 @@ const defaults = {
  * Creates a discovery swarm server that uses DNS
  * and DHT for peer discovery and TCP/UDP(uTP) as
  * transports.
+ *
  * @public
+ *
  * @param {Object} opts
+ *
  * @return {Object}
  */
+
 function createSwarm(opts) {
   if (null == opts || 'object' !== typeof opts) { opts = {} }
   debug('creating swarm')
