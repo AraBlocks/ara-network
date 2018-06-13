@@ -153,7 +153,6 @@ async function onmessage({id, type}) {
 
   // Different places to search for the corresponding node
   boot([
-    `../nodes/${type}`,
     `ara-network-node-${type}`,
     type,
     resolve(type)
