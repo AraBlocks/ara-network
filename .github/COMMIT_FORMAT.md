@@ -103,4 +103,3 @@ To migrate your project, change all the commands, where you use
 ```
 
 [karma-git-format]: http://karma-runner.github.io/0.10/dev/git-commit-msg.html
-S
