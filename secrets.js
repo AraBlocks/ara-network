@@ -15,6 +15,16 @@ const PKX = Buffer.from('PKX')
 // secret keystore header
 const SKX = Buffer.from('SKX')
 
+/**
+ * Parses object or buffer into key pair
+ *
+ * @private
+ *
+ * @param  {(Buffer|Object)} keyPair To-be parsed content
+ *
+ * @return {Object}         Parsed key pair
+ */
+
 function ensureKeyPair(keyPair) {
   if ('publicKey' in keyPair && 'secretKey' in keyPair) {
     return keyPair
@@ -268,7 +278,7 @@ function decrypt(doc, opts) {
     keys.remote.secretKey = read((REMOTE * size) + shift, size)
     keys.client.secretKey = read((CLIENT * size) + shift, size)
 
-    // derivce public keys
+    // derive public keys
     keys.network.publicKey = keys.network.secretKey.slice(32)
     keys.remote.publicKey = keys.remote.secretKey.slice(32)
     keys.client.publicKey = keys.client.secretKey.slice(32)
