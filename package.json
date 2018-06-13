@@ -10,7 +10,7 @@
     "ans": "bin/ara-network-secrets"
   },
   "scripts": {
-    "test": "ava test",
+    "test": ":",
     "lint": "eslint .",
     "lint-fix": "eslint . --fix"
   },
