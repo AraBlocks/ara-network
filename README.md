@@ -5,19 +5,23 @@
 
 Tools for launching nodes that interact with the _ARA Network_.
 
+## Status
+This project is still in alpha development.
+
+## Dependencies
+- [Node](https://nodejs.org/en/download/) 
+
 ## Installation
 
 ```bash
 $ npm install ara-network
 ```
 
-## Usage
+## API
 
-### ara-network-node(1)
+### `ara-network-node(1)`
 
-#### Description
-
-Launches nodes that interact with _ARA Network_
+Launches nodes that interact with _ARA Network_.
 
 #### Usage
 
@@ -28,18 +32,16 @@ $ ann -t . (launch node in current directory)
 $ ann -t <relative path> (launch node by relative path)
 ```
 
-#### Examples
+#### Example
 
 *Launch ara-network-node-dht*
 ```bash
 $ ann -t dht
 ```
 
-### ara-network-secrets(1)
+### `ara-network-secrets(1)`
 
-#### Description
-
-Manage ARA keystores
+Manage ARA keystores.
 
 #### Usage
 
@@ -71,23 +73,18 @@ $ ans -k localresolver
 ```bash
 ans -r localresolver
 ```
-## Contributing
 
-[How to contribute](/CONTRIBUTING.md)
-[Commit message format](/COMMIT_FORMAT.md)
+## Contributing
+- [Commit message format](/.github/COMMIT_FORMAT.md)
+- [Commit message examples](/.github/COMMIT_FORMAT_EXAMPLES.md)
+- [How to contribute](/.github/CONTRIBUTING.md)
 
 ## See Also
-
-[ara-network-node-dht](https://github.com/arablocks/ara-network-node-dht)
-
-[ara-network-node-identity-archiver](https://github.com/arablocks/ara-network-node-identity-archiver)
-
-[ara-network-node-identity-resolver](https://github.com/arablocks/ara-network-node-identity-resolver)
-
-[ara-network-node-dns](https://github.com/arablocks/ara-network-node-dns)
-
-[ara-network-node-signalhub](https://github.com/arablocks/ara-network-node-signalhub)
+- [ara-network-node-dht](https://github.com/arablocks/ara-network-node-dht)
+- [ara-network-node-dns](https://github.com/arablocks/ara-network-node-dns)
+- [ara-network-node-signalhub](https://github.com/arablocks/ara-network-node-signalhub)
+- [ara-network-node-identity-archiver](https://github.com/arablocks/ara-network-node-identity-archiver)
+- [ara-network-node-identity-resolver](https://github.com/arablocks/ara-network-node-identity-resolver)
 
 ## License
-
 LGPL-3.0
