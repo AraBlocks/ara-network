@@ -13,7 +13,7 @@ This project is still in alpha development.
 
 ## Installation
 ```bash
-$ npm install ara-network && npm link
+$ npm install ara-network
 ```
 
 ## API
