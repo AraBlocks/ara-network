@@ -4,7 +4,7 @@ const debug = require('debug')('ara:network:secret-handshake')
 
 class Handshake {
   constructor(opts) {
-    if (null == opts || 'object' != typeof opts) {
+    if (null == opts || 'object' !== typeof opts) {
       throw new TypeError('Handshake: Expecting object.')
     }
 

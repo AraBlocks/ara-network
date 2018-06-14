@@ -52,7 +52,7 @@ test('encrypt - throws error if remote keypair doesn\'t contain a secret key', (
 })
 
 test('decrypt - converts to buffer', (t) => {
-  stub = sinon.stub(crypto, 'blake2b').callsFake((key, size) => {
+  sinon.stub(crypto, 'blake2b').callsFake((key, size) => {
     // Makes sure that the key is correctly cast to a buffer somewhere
     t.true(key instanceof Buffer)
 
@@ -67,8 +67,10 @@ test('decrypt - decrypts public', (t) => {
   const pack = encrypt({ key: 'a' })
   const decrypted = decrypt(pack.public, { key: 'a' })
 
-  // Checks for the things that should and shouldn't be there,
-  //  according to what is being set in the function
+  /*
+   * Checks for the things that should and shouldn't be there,
+   *  according to what is being set in the function
+   */
   t.truthy(!decrypted.network.secretKey)
   t.truthy(!decrypted.remote.secretKey)
   t.truthy(decrypted.client.secretKey)
@@ -79,8 +81,10 @@ test('decrypt - decrypts secret', (t) => {
   const pack = encrypt({ key: 'a' })
   const decrypted = decrypt(pack.secret, { key: 'a' })
 
-  // Checks for the things that should and shouldn't be there,
-  //  according to what is being set in the function
+  /*
+   * Checks for the things that should and shouldn't be there,
+   *  according to what is being set in the function
+   */
   t.truthy(decrypted.network.secretKey)
   t.truthy(decrypted.remote.secretKey)
   t.truthy(decrypted.client.secretKey)
@@ -125,13 +129,9 @@ test('load - throws error on opts.key not being a buffer or string', async (t) =
 })
 
 test('load - loads public', async (t) => {
-  const accessStub = sinon.stub(fs, 'access').callsFake((name, cb) => {
-    return cb(null, true)
-  })
+  sinon.stub(fs, 'access').callsFake((name, cb) => cb(null, true))
 
-  const readStub = sinon.stub(fs, 'readFile').callsFake((name, opts, cb) => {
-    return cb(null, {a:1})
-  })
+  sinon.stub(fs, 'readFile').callsFake((name, opts, cb) => cb(null, { a: 1 }))
 
   try {
     const result = await load({ key: 'a', public: true })
@@ -144,13 +144,9 @@ test('load - loads public', async (t) => {
 })
 
 test('load - loads private', async (t) => {
-  const accessStub = sinon.stub(fs, 'access').callsFake((name, cb) => {
-    return cb(null, true)
-  })
+  sinon.stub(fs, 'access').callsFake((name, cb) => cb(null, true))
 
-  const readStub = sinon.stub(fs, 'readFile').callsFake((name, opts, cb) => {
-    return cb(null, {a:1})
-  })
+  sinon.stub(fs, 'readFile').callsFake((name, opts, cb) => cb(null, { a: 1 }))
 
   try {
     const result = await load({ key: 'a', public: false })
