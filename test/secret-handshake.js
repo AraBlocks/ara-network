@@ -5,7 +5,7 @@ const crypto = require('ara-crypto')
 const HEXCONST = 0xDEADBEEF
 
 test('fails to create Handshake instance', (t) => {
-  t.throws(() => { new Handshake() }, TypeError)
+  t.throws(() => { Handshake() }, TypeError)
 })
 
 test('creates Handshake instance', (t) => {
