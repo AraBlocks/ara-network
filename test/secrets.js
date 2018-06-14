@@ -1,6 +1,7 @@
 const { test } = require('ava')
 const crypto = require('ara-crypto')
 const sinon = require('sinon')
+const fs = require('fs')
 const {
   encrypt,
   decrypt,
@@ -50,12 +51,6 @@ test('encrypt - throws error if remote keypair doesn\'t contain a secret key', (
   t.truthy(pack.secret.keystore)
 })
 
-let stub
-test.after((t) => {
-  // Put crypto.blake2b back after the next test
-  stub.restore()
-})
-
 test('decrypt - converts to buffer', (t) => {
   stub = sinon.stub(crypto, 'blake2b').callsFake((key, size) => {
     // Makes sure that the key is correctly cast to a buffer somewhere
@@ -65,7 +60,7 @@ test('decrypt - converts to buffer', (t) => {
   })
 
   const pack = encrypt({ key: 'a' })
-  const decrypted = decrypt(pack.public, { key: 'a' })
+  decrypt(pack.public, { key: 'a' })
 })
 
 test('decrypt - decrypts public', (t) => {
@@ -95,3 +90,74 @@ test('decrypt - decrypts secret', (t) => {
   t.truthy(decrypted.client.publicKey)
 })
 
+test('derive - returns doc if remote secret defined', (t) => {
+  const pack = encrypt({ key: 'a' })
+
+  const { secret } = derive(pack.secret, { key: 'a' })
+
+  t.is(secret, pack.secret)
+})
+
+test('derive - returns doc if remote secret not defined', (t) => {
+  const pack = encrypt({ key: 'a' })
+
+  const derived = derive(pack.public, { key: 'a' })
+
+  t.is(derived.public, pack.public)
+})
+
+test('load - throws error on no opts', async (t) => {
+  try {
+    await load()
+    t.fail()
+  } catch (e) {
+    t.pass()
+  }
+})
+
+test('load - throws error on opts.key not being a buffer or string', async (t) => {
+  try {
+    await load({ key: 1 })
+    t.fail()
+  } catch (e) {
+    t.pass()
+  }
+})
+
+test('load - loads public', async (t) => {
+  const accessStub = sinon.stub(fs, 'access').callsFake((name, cb) => {
+    return cb(null, true)
+  })
+
+  const readStub = sinon.stub(fs, 'readFile').callsFake((name, opts, cb) => {
+    return cb(null, {a:1})
+  })
+
+  try {
+    const result = await load({ key: 'a', public: true })
+    t.truthy(result)
+    t.true(result.public.a == 1)
+    t.pass()
+  } catch (e) {
+    t.fail()
+  }
+})
+
+test('load - loads private', async (t) => {
+  const accessStub = sinon.stub(fs, 'access').callsFake((name, cb) => {
+    return cb(null, true)
+  })
+
+  const readStub = sinon.stub(fs, 'readFile').callsFake((name, opts, cb) => {
+    return cb(null, {a:1})
+  })
+
+  try {
+    const result = await load({ key: 'a', public: false })
+    t.truthy(result)
+    t.true(result.private.a == 1)
+    t.pass()
+  } catch (e) {
+    t.fail()
+  }
+})
