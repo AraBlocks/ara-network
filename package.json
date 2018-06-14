@@ -53,7 +53,7 @@
   "devDependencies": {
     "ava": "^0.25.0",
     "eslint": "^4.19.1",
-    "eslint-config-littlstar": "github:littlstar/eslint-config-littlstar",
+    "eslint-config-ara": "github:arablocks/eslint-config-ara",
     "eslint-plugin-import": "^2.12.0"
   }
 }
