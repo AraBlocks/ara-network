@@ -319,7 +319,7 @@ async function load(opts) {
   paths.secret = resolve(opts.root || rc.network.secrets.root, key)
   paths.public = `${paths.secret}.pub`
 
-  if (false !== opts.public) {
+  if (true == opts.public) {
     try {
       await pify(fs.access)(paths.public)
       result.public = await pify(fs.readFile)(paths.public, 'utf8')
@@ -327,7 +327,7 @@ async function load(opts) {
     } catch (err) { debug(err) }
   }
 
-  if (true !== opts.public) {
+  if (false == opts.public) {
     try {
       await pify(fs.access)(paths.secret)
       result.secret = await pify(fs.readFile)(paths.secret, 'utf8')
