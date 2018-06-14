@@ -158,7 +158,7 @@ function pack(keys, opts) {
 
   free()
 
-  for (const k in Object.keys(keys)) {
+  for (const k in keys) {
     if ('publicKey' in keys[k]) {
       keys[k].publicKey.fill(0)
     }
