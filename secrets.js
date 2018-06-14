@@ -58,11 +58,11 @@ function ensureKeyPair(keyPair) {
 function encrypt(opts) {
   const keys = {}
 
-  if (null == opts || 'object' != typeof opts) {
+  if (null == opts || 'object' !== typeof opts) {
     throw new TypeError('encrypt: Expecting object.')
   }
 
-  if (false == Buffer.isBuffer(opts.key) && 'string' != typeof opts.key) {
+  if (false == Buffer.isBuffer(opts.key) && 'string' !== typeof opts.key) {
     throw new TypeError('encrypt: Expecting buffer or string as key.')
   }
 
@@ -305,11 +305,11 @@ function decrypt(doc, opts) {
  */
 
 async function load(opts) {
-  if (null == opts || 'object' != typeof opts) {
+  if (null == opts || 'object' !== typeof opts) {
     throw new TypeError('load: Expecting object.')
   }
 
-  if (false == Buffer.isBuffer(opts.key) && 'string' != typeof opts.key) {
+  if (false == Buffer.isBuffer(opts.key) && 'string' !== typeof opts.key) {
     throw new TypeError('load: Expecting key to be a buffer or string.')
   }
 
