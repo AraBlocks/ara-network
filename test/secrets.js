@@ -128,7 +128,7 @@ test('load - throws error on opts.key not being a buffer or string', async (t) =
   }
 })
 
-test.before((t) => {
+test.before(() => {
   sinon.stub(fs, 'access').callsFake((name, cb) => cb(null, true))
 
   sinon.stub(fs, 'readFile').callsFake((name, opts, cb) => cb(null, { a: 1 }))
