@@ -128,11 +128,13 @@ test('load - throws error on opts.key not being a buffer or string', async (t) =
   }
 })
 
-test('load - loads public', async (t) => {
+test.before((t) => {
   sinon.stub(fs, 'access').callsFake((name, cb) => cb(null, true))
 
   sinon.stub(fs, 'readFile').callsFake((name, opts, cb) => cb(null, { a: 1 }))
+})
 
+test('load - loads public', async (t) => {
   try {
     const result = await load({ key: 'a', public: true })
     t.truthy(result)
@@ -143,15 +145,11 @@ test('load - loads public', async (t) => {
   }
 })
 
-test('load - loads private', async (t) => {
-  sinon.stub(fs, 'access').callsFake((name, cb) => cb(null, true))
-
-  sinon.stub(fs, 'readFile').callsFake((name, opts, cb) => cb(null, { a: 1 }))
-
+test('load - loads secret', async (t) => {
   try {
     const result = await load({ key: 'a', public: false })
     t.truthy(result)
-    t.true(result.private.a == 1)
+    t.true(result.secret.a == 1)
     t.pass()
   } catch (e) {
     t.fail()
