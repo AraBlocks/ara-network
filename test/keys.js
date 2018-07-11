@@ -126,47 +126,47 @@ test('keys.unpack0(opts) correctly unpacks keys', (t) => {
   }
 
   const unpacked = {
-    combined: keys.unpack({ buffer: Buffer.concat([ packed.public, packed.secret ]) }),
+    combined: keys.unpack({ buffer: Buffer.concat([packed.public, packed.secret]) }),
     public: keys.unpack({ buffer: packed.public }),
     secret: keys.unpack({ buffer: packed.secret }),
   }
 
-  t.true(0 == Buffer.compare(
+  t.true(0 === Buffer.compare(
     discoveryKey,
     unpacked.combined.discoveryKey
   ))
 
-  t.true(0 == Buffer.compare(
+  t.true(0 === Buffer.compare(
     discoveryKey,
     unpacked.public.discoveryKey
   ))
 
-  t.true(0 == Buffer.compare(
+  t.true(0 === Buffer.compare(
     discoveryKey,
     unpacked.secret.discoveryKey
   ))
 
-  t.true(0 == Buffer.compare(
+  t.true(0 === Buffer.compare(
     publicKey,
     unpacked.combined.publicKey
   ))
 
-  t.true(0 == Buffer.compare(
+  t.true(0 === Buffer.compare(
     publicKey,
     unpacked.public.publicKey
   ))
 
-  t.true(0 == Buffer.compare(
+  t.true(0 === Buffer.compare(
     publicKey,
     unpacked.secret.publicKey
   ))
 
-  t.true(0 == Buffer.compare(
+  t.true(0 === Buffer.compare(
     domain.secretKey,
     unpacked.combined.domain.secretKey
   ))
 
-  t.true(0 == Buffer.compare(
+  t.true(0 === Buffer.compare(
     domain.secretKey,
     unpacked.secret.domain.secretKey
   ))
@@ -201,13 +201,140 @@ test('keys.generate0() throws TypeError for bad input', (t) => {
 test('keys.generate0() correctly generates packed keys', (t) => {
   const { publicKey, secretKey } = crypto.keyPair()
   const secret = crypto.randomBytes(16)
-  const domain = crypto.curve25519.keyPair()
-  const netkeys = keys.generate0({publicKey, secretKey, secret})
+  const netkeys = keys.generate0({ publicKey, secretKey, secret })
+  const unpacked = keys.unpack0({ buffer: netkeys })
 
-  const unpacked = keys.unpack0({buffer: netkeys})
-
-  t.true(0 == Buffer.compare(
+  t.true(0 === Buffer.compare(
     publicKey,
     unpacked.publicKey
   ))
+})
+
+test('keys.encrypt0() is a function', (t) => {
+  t.true('function' === typeof keys.encrypt0)
+})
+
+test('keys.encrypt0() throws TypeError for bad input', (t) => {
+  t.throws(() => keys.encrypt0(), TypeError)
+  t.throws(() => keys.encrypt0(null), TypeError)
+  t.throws(() => keys.encrypt0(true), TypeError)
+  t.throws(() => keys.encrypt0(123), TypeError)
+  t.throws(() => keys.encrypt0(NaN), TypeError)
+  t.throws(() => keys.encrypt0(() => {}), TypeError)
+})
+
+test('keys.encrypt0() encrypts public network keys', (t) => {
+  const { publicKey, secretKey } = crypto.keyPair()
+  const secret = crypto.randomBytes(16)
+  const domain = crypto.curve25519.keyPair()
+  const discoveryKey = crypto.blake2b(domain.secretKey)
+  const buffer = keys.pack0({
+    type: keys.PKX, discoveryKey, publicKey, domain
+  })
+
+  const encrypted = keys.encrypt0({ buffer, secretKey, secret })
+  t.true('object' === typeof encrypted)
+
+  const key = crypto.blake2b(crypto.blake2b(secret, 32), 16)
+  const decrypted = crypto.decrypt(encrypted, { key })
+
+  t.true(0 === Buffer.compare(decrypted, buffer))
+})
+
+test('keys.encrypt0() encrypts secret network keys', (t) => {
+  const { publicKey, secretKey } = crypto.keyPair()
+  const secret = crypto.randomBytes(16)
+  const domain = crypto.curve25519.keyPair()
+  const discoveryKey = crypto.blake2b(domain.secretKey)
+  const buffer = keys.pack0({
+    type: keys.SKX, discoveryKey, publicKey, domain
+  })
+
+  const encrypted = keys.encrypt0({ buffer, secretKey, secret })
+  t.true('object' === typeof encrypted)
+
+  const key = crypto.blake2b(Buffer.concat([crypto.blake2b(secret, 32), secretKey]), 16)
+  const decrypted = crypto.decrypt(encrypted, { key })
+
+  t.true(0 === Buffer.compare(decrypted, buffer))
+})
+
+test('keys.decrypt0() is a function', (t) => {
+  t.true('function' === typeof keys.decrypt0)
+})
+
+test('keys.decrypt0() throws TypeError for bad input', (t) => {
+  t.throws(() => keys.decrypt0(), TypeError)
+  t.throws(() => keys.decrypt0(null), TypeError)
+  t.throws(() => keys.decrypt0(true), TypeError)
+  t.throws(() => keys.decrypt0(123), TypeError)
+  t.throws(() => keys.decrypt0(NaN), TypeError)
+  t.throws(() => keys.decrypt0(() => {}), TypeError)
+})
+
+test('keys.decrypt0() decrypts public network keys', (t) => {
+  const { publicKey, secretKey } = crypto.keyPair()
+  const secret = crypto.randomBytes(16)
+  const domain = crypto.curve25519.keyPair()
+  const discoveryKey = crypto.blake2b(domain.secretKey)
+  const buffer = keys.pack0({
+    type: keys.PKX, discoveryKey, publicKey, domain
+  })
+
+  const encrypted = keys.encrypt0({ buffer, secretKey, secret })
+  t.true('object' === typeof encrypted)
+
+  const decrypted = keys.decrypt0(encrypted, { secret })
+
+  t.true(0 === Buffer.compare(decrypted, buffer))
+})
+
+test('keys.decrypt0() decrypts secret network keys', (t) => {
+  const { publicKey, secretKey } = crypto.keyPair()
+  const secret = crypto.randomBytes(16)
+  const domain = crypto.curve25519.keyPair()
+  const discoveryKey = crypto.blake2b(domain.secretKey)
+  const buffer = keys.pack0({
+    type: keys.SKX, discoveryKey, publicKey, domain
+  })
+
+  const encrypted = keys.encrypt0({ buffer, secretKey, secret })
+  t.true('object' === typeof encrypted)
+
+  const decrypted = keys.decrypt0(encrypted, { secretKey, secret })
+
+  t.true(0 === Buffer.compare(decrypted, buffer))
+})
+
+test('keys.keyPair0() is a function', (t) => {
+  t.true('function' === typeof keys.keyPair0)
+})
+
+test('keys.keyPair0() throws TypeError for bad input', (t) => {
+  t.throws(() => keys.keyPair0(), TypeError)
+  t.throws(() => keys.keyPair0(null), TypeError)
+  t.throws(() => keys.keyPair0(true), TypeError)
+  t.throws(() => keys.keyPair0(123), TypeError)
+  t.throws(() => keys.keyPair0(NaN), TypeError)
+  t.throws(() => keys.keyPair0(() => {}), TypeError)
+})
+
+test('keys.keyPair0() should generate public keys', (t) => {
+  const { publicKey, secretKey } = crypto.keyPair()
+  const secret = crypto.randomBytes(16)
+  const keyPair = keys.keyPair0({ publicKey, secretKey, secret })
+  const buffer = keys.decrypt0(keyPair.publicKeys, { secret })
+  const unpacked = keys.unpack0({ buffer })
+  t.true('object' === typeof keyPair.publicKeys)
+  t.true(0 === Buffer.compare(publicKey, unpacked.publicKey))
+})
+
+test('keys.keyPair0() should generate secret keys', (t) => {
+  const { publicKey, secretKey } = crypto.keyPair()
+  const secret = crypto.randomBytes(16)
+  const keyPair = keys.keyPair0({ publicKey, secretKey, secret })
+  const buffer = keys.decrypt0(keyPair.secretKeys, { secretKey, secret })
+  const unpacked = keys.unpack0({ buffer })
+  t.true('object' === typeof keyPair.secretKeys)
+  t.true(Buffer.isBuffer(unpacked.domain.secretKey))
 })
