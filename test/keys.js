@@ -126,7 +126,10 @@ test('keys.unpack0(opts) correctly unpacks keys', (t) => {
   }
 
   const unpacked = {
-    combined: keys.unpack({ buffer: Buffer.concat([packed.public, packed.secret]) }),
+    combined: keys.unpack({
+      buffer: Buffer.concat([ packed.public, packed.secret ])
+    }),
+
     public: keys.unpack({ buffer: packed.public }),
     secret: keys.unpack({ buffer: packed.secret }),
   }
@@ -253,7 +256,10 @@ test('keys.encrypt0() encrypts secret network keys', (t) => {
   const encrypted = keys.encrypt0({ buffer, secretKey, secret })
   t.true('object' === typeof encrypted)
 
-  const key = crypto.blake2b(Buffer.concat([crypto.blake2b(secret, 32), secretKey]), 16)
+  const key = crypto.blake2b(Buffer.concat([
+    crypto.blake2b(secret, 32), secretKey
+  ]), 16)
+
   const decrypted = crypto.decrypt(encrypted, { key })
 
   t.true(0 === Buffer.compare(decrypted, buffer))
