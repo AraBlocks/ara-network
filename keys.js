@@ -40,6 +40,20 @@ const PK_SIZE = PK_SIZE0
 const SK_SIZE = SK_SIZE0
 
 /**
+ * Creates and returns a new 'TypeError'
+ * for unknown magic byte type (T)
+ *
+ * @private
+ * @param {String} name
+ * @param {Number} T
+ * @return {TypeError}
+ */
+function unknownTypeError(name, T) {
+  const hex = parseInt(T, 10).toString(16)
+  return new TypeError(`${name}: Unknown type: 0x${hex}`)
+}
+
+/**
  * Pack keys into a compact buffer.
  *
  * @public
@@ -103,8 +117,8 @@ function pack0(opts) {
   }
 
   // + 1 + 1
-  buffer.push(Buffer.from([T]))
-  buffer.push(Buffer.from([V]))
+  buffer.push(Buffer.from([ T ]))
+  buffer.push(Buffer.from([ V ]))
 
   if (!D || false === isBuffer(D)) {
     throw new TypeError('pack: Invalid discovery key')
@@ -356,7 +370,7 @@ function encrypt0(opts) {
     crypto.blake2b(s, 16).copy(key)
   } else if (T === SKX) {
     // k = blake2b(S' . Bs)
-    crypto.blake2b(Buffer.concat([s, Bs]), 16).copy(key)
+    crypto.blake2b(Buffer.concat([ s, Bs ]), 16).copy(key)
   } else {
     throw unknownTypeError('encrypt', T)
   }
@@ -372,6 +386,8 @@ function encrypt0(opts) {
 }
 
 /**
+ * Decrypt a network keys secret storage
+ *
  * @public
  * @param {Object} opts
  * @param {Buffer} opts.buffer
@@ -405,6 +421,7 @@ function decrypt(storage, opts) {
 }
 
 /**
+ * Version 0 of network keys secret storage decryption
  * @public
  * @param {Object} opts
  * @param {Buffer} opts.buffer
@@ -437,7 +454,7 @@ function decrypt0(storage, opts) {
     crypto.blake2b(s, 16).copy(key)
   } else if (T === SKX) {
     // k = blake2b(S' . Bs)
-    crypto.blake2b(Buffer.concat([s, Bs]), 16).copy(key)
+    crypto.blake2b(Buffer.concat([ s, Bs ]), 16).copy(key)
   } else {
     throw unknownTypeError('decrypt', T)
   }
@@ -506,7 +523,7 @@ function generate0(opts) {
   // ephemeral shared secret
   const s = crypto.blake2b(S, 32)
   // compute K seed
-  const seed = crypto.blake2b(Buffer.concat([s, bs]), 32)
+  const seed = crypto.blake2b(Buffer.concat([ s, bs ]), 32)
   // constant domain key pair from blake2b(s . bs)
   const K = crypto.curve25519.keyPair(seed)
   // constant discovery key from Kp
@@ -570,6 +587,12 @@ function keyPair(opts) {
 }
 
 /**
+ * Version 0 to generate a network keys secret storage key pair.
+ *
+ * @public
+ * @param {Object} opts
+ * @return {Object}
+ * @throws TypeError
  */
 function keyPair0(opts) {
   if (!opts || 'object' !== typeof opts) {
@@ -589,10 +612,6 @@ function keyPair0(opts) {
   })
 
   return { publicKeys, secretKeys }
-}
-
-function unknownTypeError(n, T) {
-  return new TypeError(`${n}: Unknown type: 0x${parseInt(T, 10).toString(16)}`)
 }
 
 module.exports = {
