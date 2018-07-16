@@ -29,7 +29,7 @@ const HEADER_SIZE0 = 1 + 1 + 32 + 32
 const HEADER_SIZE = HEADER_SIZE0
 
 /**
- * Public and network network key sizes,
+ * Public and secret network key sizes,
  * including the header size.
  *
  * @public
@@ -154,11 +154,11 @@ function pack0(opts) {
   const { length } = packed
 
   if (T === PKX && PK_SIZE0 !== length) {
-    throw new TypeError(`pack: Pack error: invalid packed length: ${length}`)
+    throw new TypeError(`pack: Invalid public key length: ${length}`)
   }
 
   if (T === SKX && SK_SIZE0 !== length) {
-    throw new TypeError(`pack: Pack error: invalid packed length: ${length}`)
+    throw new TypeError(`pack: Invalid secret key length: ${length}`)
   }
 
   return packed
@@ -600,18 +600,18 @@ function keyPair0(opts) {
   }
 
   const buffer = generate0(opts)
-  const publicKeys = encrypt0({
+  const publicKey = encrypt0({
     secret: opts.secret,
     buffer: buffer.slice(0, PK_SIZE0),
   })
 
-  const secretKeys = encrypt0({
+  const secretKey = encrypt0({
     secret: opts.secret,
     buffer: buffer.slice(PK_SIZE0, PK_SIZE0 + SK_SIZE0),
     secretKey: opts.secretKey,
   })
 
-  return { publicKeys, secretKeys }
+  return { publicKey, secretKey }
 }
 
 module.exports = {
