@@ -75,15 +75,16 @@ void async function main() {
     'Passphrase:'
   }])
 
-  publicKey = Buffer.from(argv.identity, 'hex')
-  password = crypto.blake2b(Buffer.from(password))
-
 
   if (0 != argv.identity.indexOf('did:ara:')) {
     argv.identity = 'did:ara:' + argv.identity
   }
 
   const did = new DID(argv.identity)
+
+  password = crypto.blake2b(Buffer.from(password))
+  publicKey = Buffer.from(did.identifier, 'hex')
+
   const hash = crypto.blake2b(publicKey).toString('hex')
   const path = resolve(rc.network.identity.root, hash, 'keys')
   const keystore = JSON.parse(await pify(fs.readFile)(path, 'utf8'))
