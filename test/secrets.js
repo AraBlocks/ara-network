@@ -138,7 +138,7 @@ test('load - loads public', async (t) => {
   try {
     const result = await load({ key: 'a', public: true })
     t.truthy(result)
-    t.true(result.public.a == 1)
+    t.true(1 === result.public.a)
     t.pass()
   } catch (e) {
     t.fail()
@@ -149,7 +149,7 @@ test('load - loads secret', async (t) => {
   try {
     const result = await load({ key: 'a', public: false })
     t.truthy(result)
-    t.true(result.secret.a == 1)
+    t.true(1 === result.secret.a)
     t.pass()
   } catch (e) {
     t.fail()
