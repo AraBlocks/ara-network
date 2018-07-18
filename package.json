@@ -6,8 +6,10 @@
   "bin": {
     "ara-network-node": "bin/ara-network-node",
     "ara-network-secrets": "bin/ara-network-secrets",
+    "ara-network-keys": "bin/ara-network-keys",
     "ann": "bin/ara-network-node",
-    "ans": "bin/ara-network-secrets"
+    "ans": "bin/ara-network-secrets",
+    "ank": "bin/ara-network-keys"
   },
   "scripts": {
     "test": "ava test",
@@ -33,11 +35,13 @@
   "dependencies": {
     "ara-console": "github:arablocks/ara-console",
     "ara-crypto": "github:arablocks/ara-crypto",
+    "ara-identity": "github:arablocks/ara-identity",
     "ara-runtime-configuration": "github:arablocks/ara-runtime-configuration",
     "async-exit-hook": "^2.0.1",
     "bittorrent-dht": "^8.3.0",
     "collect-stream": "^1.2.1",
     "debug": "^3.1.0",
+    "did-uri": "^0.2.4",
     "discovery-channel": "^5.5.1",
     "discovery-swarm": "^5.1.1",
     "dns-discovery": "^6.1.0",
