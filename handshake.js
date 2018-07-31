@@ -113,7 +113,7 @@ class Handshake extends Transform {
         crypto.curve25519.shared(session.local.publicKey, hello.publicKey),
       )
     } else {
-      done(unknownHandshakeStateError())
+      done(handshakeStateError())
       return
     }
 
@@ -196,7 +196,7 @@ class Handshake extends Transform {
         done(handshakeAuthenticationError())
       }
     } else {
-      done(unknownHandshakeStateError())
+      done(handshakeStateError())
     }
   }
 
@@ -245,7 +245,7 @@ class Handshake extends Transform {
     } else if (isAlice(this)) {
       key = crypto.blake2b(domain.publicKey)
     } else {
-      throw unknownHandshakeStateError()
+      throw handshakeStateError()
     }
 
     const mac = crypto.auth(session.local.publicKey, key)
@@ -297,10 +297,12 @@ class Handshake extends Transform {
 
     const key = Buffer.concat([
       domain.publicKey,
+
       crypto.curve25519.shared(
         session.local.publicKey,
         session.remote.publicKey
       ),
+
       crypto.curve25519.shared(
         session.local.publicKey,
         remote.publicKey
@@ -531,7 +533,7 @@ class Handshake extends Transform {
         )
       ])
     } else {
-      throw unknownHandshakeStateError()
+      throw handshakeStateError()
     }
 
     const stream = crypto.createBoxStream({ key, nonce })
@@ -616,7 +618,7 @@ class Handshake extends Transform {
         )
       ])
     } else {
-      throw unknownHandshakeStateError()
+      throw handshakeStateError()
     }
 
     const stream = crypto.createUnboxStream({ key, nonce })
@@ -675,7 +677,8 @@ class State {
       throw new TypeError('State: Expecting object')
     }
 
-    const { nonce = crypto.randomBytes(32) } = opts
+    // use a zero buffer as default nonce
+    const { nonce = Buffer.alloc(32).fill(0) } = opts
     const { publicKey, secretKey } = opts
     const { remote = {}, domain } = opts
     const { secret, version } = opts
@@ -756,7 +759,7 @@ function isAlice(shake) {
     shake.state.domain.publicKey)
 }
 
-function unknownHandshakeStateError() {
+function handshakeStateError() {
   return new TypeError('Unknown handshake state')
 }
 
