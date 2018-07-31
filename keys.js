@@ -341,7 +341,7 @@ function encrypt(opts) {
  * @param {Object} opts
  * @param {Buffer} opts.buffer
  * @param {Buffer} opts.secret
- * @param {Buffer} opts.secretKey
+ * @param {?(Buffer)} opts.secretKey
  * @return {Object}
  * @throws TypeError
  */
