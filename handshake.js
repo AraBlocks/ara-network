@@ -51,7 +51,8 @@ class Handshake extends Transform {
     }
 
     this.state = new State(clone(opts, {
-      nonce: Buffer.alloc(32).fill(kVersion)
+      version: opts.version || kVersion,
+      nonce: Buffer.alloc(32).fill(opts.version || kVersion)
     }))
 
     this.setMaxListeners(0)
