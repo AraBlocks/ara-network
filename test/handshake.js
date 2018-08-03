@@ -13,7 +13,7 @@ test('State is a function', (t) => {
 })
 
 test('Handshake simple', async (t) => {
-  t.plan(3 + 1 + 2 + 2 + 3 + 3 + 3 + 1 + 3 + 1 + 1 + 1)
+  t.plan(31)
 
   // 3
   t.throws(() => new Handshake(), TypeError)
@@ -60,7 +60,11 @@ test('Handshake simple', async (t) => {
     let reader = null
     let writer = null
 
+    t.true(State.HELLO === remote.state.phase)
+    t.true(State.HELLO === client.state.phase)
+
     remote.once('hello', (hello) => {
+      // console.log('remote hello')
       // 3
       t.true('object' === typeof hello)
       t.true(isBuffer(hello.publicKey))
@@ -68,9 +72,13 @@ test('Handshake simple', async (t) => {
         client.state.session.local.publicKey,
         hello.publicKey
       ))
+
+      t.true(State.AUTH === remote.state.phase)
+      t.true(remote.hello())
     })
 
     client.once('hello', (hello) => {
+      // console.log('client hello')
       // 3
       t.true('object' === typeof hello)
       t.true(isBuffer(hello.publicKey))
@@ -79,10 +87,20 @@ test('Handshake simple', async (t) => {
         hello.publicKey
       ))
 
-      client.auth()
+      t.true(State.AUTH === client.state.phase)
+      t.true(client.auth())
     })
 
     client.once('auth', (auth) => {
+      // console.log('client auth')
+      // 3
+      t.true('object' === typeof auth)
+      t.true(isBuffer(auth.publicKey))
+      t.true(isBuffer(auth.signature))
+    })
+
+    remote.once('auth', (auth) => {
+      // console.log('remote auth')
       // 3
       t.true('object' === typeof auth)
       t.true(isBuffer(auth.publicKey))
@@ -90,42 +108,48 @@ test('Handshake simple', async (t) => {
     })
 
     client.once('okay', (signature) => {
+      // console.log('client okay')
       // 1
       t.true(isBuffer(signature))
 
       writer = client.createWriteStream()
-    })
 
-    remote.once('auth', (auth) => {
-      // 3
-      t.true('object' === typeof auth)
-      t.true(isBuffer(auth.publicKey))
-      t.true(isBuffer(auth.signature))
+      setTimeout(() => writer.write(message), 1000)
+
+      client.createReadStream().once('data', (chunk) => {
+        // console.log('client data')
+        // 1
+        t.true(0 === Buffer.compare(chunk, message))
+        client.end()
+      })
     })
 
     remote.once('okay', (signature) => {
+      // console.log('remote okay')
       // 1
       t.true(isBuffer(signature))
 
-      reader = client.createReadStream()
-
+      reader = remote.createReadStream()
       reader.once('data', (chunk) => {
+        // console.log('remote data')
         // 1
         t.true(0 === Buffer.compare(chunk, message))
         remote.createWriteStream().write(message)
       })
 
-      client.createReadStream().once('data', (chunk) => {
-        // 1
-        t.true(0 === Buffer.compare(chunk, message))
+      client.once('end', () => {
+        // console.log('client end')
+        remote.end()
+        client.destroy()
+        remote.destroy()
         resolve()
       })
-
-      writer.write(message)
     })
 
+    // client.pipe(remote).pipe(client)
     pump(client, remote, client)
 
-    client.hello()
+    // 1
+    t.true(client.hello())
   })
 })

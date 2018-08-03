@@ -1,7 +1,8 @@
-const { Transform } = require('readable-stream')
-const duplexify = require('duplexify')
+const { Duplex } = require('readable-stream')
 const isBuffer = require('is-buffer')
+const through = require('through2')
 const crypto = require('ara-crypto')
+const pump = require('pump')
 
 const $session = Symbol('session')
 const $version = Symbol('version')
@@ -22,10 +23,10 @@ const kVersion = 'ARANET1'
  * version of Dominic Tarr's Secret Handshake.
  * @public
  * @class Handshake
- * @extends stream.Transform
+ * @extends stream.Duplex
  * @see {@link http://dominictarr.github.io/secret-handshake-paper/shs.pdf}
  */
-class Handshake extends Transform {
+class Handshake extends Duplex {
   /**
    * Static accessor to get the version of this handshake.
    * @public
@@ -50,38 +51,49 @@ class Handshake extends Transform {
       throw new TypeError('Handshake: Expecting object.')
     }
 
+    this.setMaxListeners(0)
+
+    this.source = through()
     this.state = new State(clone(opts, {
       version: opts.version || kVersion,
       nonce: Buffer.alloc(32).fill(opts.version || kVersion)
     }))
-
-    this.setMaxListeners(0)
   }
 
-  _transform(chunk, enc, done) {
-    this.onmessage(chunk, done)
+  toString() {
+    return this.isAlice
+      ? `Handshake<Alice ${this.state.publicKey.toString('hex')}>`
+      : `Handshake<Bob ${this.state.publicKey.toString('hex')}>`
+  }
+
+  _read() {
+    void this
+  }
+
+  _write(chunk, enc, done) {
+    done(null)
+
+    if (State.OKAY === this.state.phase) {
+      this.source.push(chunk)
+    } else {
+      this.onmessage(chunk)
+    }
   }
 
   /**
    * Handles raw messages written to the duplex stream.
    * @private
    */
-  onmessage(chunk, done) {
+  onmessage(chunk) {
     const { phase } = this.state
 
     if (State.HELLO === phase) {
-      return this.onhello(chunk, done)
+      this.onhello(chunk)
     }
 
     if (State.AUTH === phase) {
-      return this.onauth(chunk, done)
+      this.onauth(chunk)
     }
-
-    if (State.OKAY === phase) {
-      return done(null)
-    }
-
-    return done(null)
   }
 
   /**
@@ -89,7 +101,7 @@ class Handshake extends Transform {
    * A <- ? : bp, HMAC[k](bp)
    * @private
    */
-  onhello(chunk, done) {
+  onhello(chunk) {
     const { state } = this
     const { domain } = state
     const { session } = state
@@ -102,7 +114,6 @@ class Handshake extends Transform {
     let key = null
 
     if (isBuffer(session.remote.publicKey)) {
-      done(null)
       return
     }
 
@@ -114,31 +125,22 @@ class Handshake extends Transform {
         crypto.curve25519.shared(session.local.publicKey, hello.publicKey),
       )
     } else {
-      done(handshakeStateError())
-      return
+      throw handshakeStateError()
     }
 
     if (crypto.auth.verify(hello.mac, hello.publicKey, key)) {
       this.state.session.remote.publicKey = hello.publicKey
       this.state.session.remote.nonce = hello.mac.slice(0, 24)
 
-      if (isBob(this)) {
-        this.hello()
-        this.state[$phase] = State.AUTH
-      } else {
-        this.state[$phase] = State.NONE
-      }
-
+      this.state[$phase] = State.AUTH
       this.emit('hello', hello)
-
-      done(null)
     } else {
       this.state[$phase] = State.NONE
-      done(handshakeVerificationError())
+      throw handshakeVerificationError()
     }
   }
 
-  onauth(chunk, done) {
+  onauth(chunk) {
     const { state } = this
     const { nonce } = state
     const { local } = state
@@ -149,9 +151,11 @@ class Handshake extends Transform {
     if (isBob(this)) {
       const key = Buffer.concat([
         domain.publicKey,
+
         crypto.curve25519.shared(
           session.remote.publicKey,
           session.local.publicKey
+
         ),
         crypto.curve25519.shared(
           session.remote.publicKey,
@@ -163,11 +167,18 @@ class Handshake extends Transform {
       const publicKey = unboxed.slice(0, 32)
       const signature = unboxed.slice(32)
 
-      if (this.verify(publicKey, signature) && this.okay(unboxed)) {
-        done(null)
-      } else {
-        done(handshakeAuthenticationError())
+      if (!this.verify(publicKey, signature)) {
+        throw handshakeAuthenticationError()
       }
+
+      this.emit('auth', { publicKey, signature })
+
+      if (!this.okay(unboxed)) {
+        throw handshakeAuthenticationError()
+      }
+
+      this.state[$phase] = State.OKAY
+      this.emit('okay', signature)
     } else if (isAlice(this)) {
       const key = Buffer.concat([
         domain.publicKey,
@@ -190,14 +201,20 @@ class Handshake extends Transform {
 
       const signature = crypto.unbox(chunk, { key, nonce })
 
-      if (this.verify(remote.publicKey, signature) && this.okay(signature)) {
-        done(null)
-        this.emit('okay', signature)
-      } else {
-        done(handshakeAuthenticationError())
+      if (!this.verify(remote.publicKey, signature)) {
+        throw handshakeAuthenticationError()
       }
+
+      this.emit('auth', { publicKey: remote.publicKey, signature })
+
+      if (!this.okay(signature)) {
+        throw handshakeAuthenticationError()
+      }
+
+      this.state[$phase] = State.OKAY
+      this.emit('okay', signature)
     } else {
-      done(handshakeStateError())
+      throw handshakeStateError()
     }
   }
 
@@ -252,8 +269,6 @@ class Handshake extends Transform {
     const mac = crypto.auth(session.local.publicKey, key)
     const buffer = Buffer.concat([ mac, session.local.publicKey ])
 
-    // set initial state phase
-    state[$phase] = State.HELLO
     state.session.local.nonce = mac.slice(0, 24)
 
     return this.push(buffer)
@@ -311,8 +326,6 @@ class Handshake extends Transform {
     ])
 
     const box = crypto.box(H, { key, nonce })
-
-    this.state[$phase] = State.AUTH
 
     return this.push(box)
   }
@@ -384,10 +397,6 @@ class Handshake extends Transform {
       verified = crypto.ed25519.verify(signature, proof, publicKey)
     }
 
-    if (verified) {
-      this.emit('auth', { publicKey, signature })
-    }
-
     return verified
   }
 
@@ -414,8 +423,6 @@ class Handshake extends Transform {
         isBuffer(session.remote.publicKey) &&
         isBuffer(session.remote.nonce)
       ) {
-        this.state[$phase] = State.OKAY
-        this.emit('okay', chunk)
         return true
       }
     }
@@ -459,10 +466,7 @@ class Handshake extends Transform {
 
       remote.publicKey = alice.publicKey
 
-      this.state[$phase] = State.OKAY
-
       if (this.push(boxed)) {
-        this.emit('okay', signature)
         return true
       }
     }
@@ -538,21 +542,30 @@ class Handshake extends Transform {
     }
 
     const stream = crypto.createBoxStream({ key, nonce })
-    const writer = duplexify(stream)
+    const push = this.push.bind(this)
 
-    this.on('end', () => {
-      stream.end()
+    this.once('destroy', ondestroy)
+
+    stream.on('data', ondata)
+    stream.on('error', (err) => {
+      cleanup()
+      this.emit('error', err)
     })
 
-    this.on('destroy', () => {
-      stream.destroy()
-    })
+    return stream
 
-    stream.on('data', (chunk) => {
-      this.push(chunk)
-    })
+    function cleanup() {
+      stream.removeListener('data', ondata)
+    }
 
-    return writer
+    function ondata(chunk) {
+      push(chunk)
+    }
+
+    function ondestroy(err) {
+      cleanup()
+      stream.destroy(err)
+    }
   }
 
   /**
@@ -623,21 +636,10 @@ class Handshake extends Transform {
     }
 
     const stream = crypto.createUnboxStream({ key, nonce })
-    const reader = duplexify(null, stream)
 
-    this.on('data', (chunk) => {
-      stream.write(chunk)
-    })
+    pump(this.source, stream)
 
-    this.on('end', () => {
-      stream.end()
-    })
-
-    this.on('destroy', () => {
-      stream.destroy()
-    })
-
-    return reader
+    return stream
   }
 }
 
