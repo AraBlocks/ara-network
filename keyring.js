@@ -66,8 +66,12 @@ class Keyring extends EventEmitter {
       throw new TypeError('Keyring: Expecting nonce to be a buffer.')
     }
 
+    if (false === isBuffer(this.key)) {
+      throw new TypeError('Keyring: Expecting key to be a buffer.')
+    }
+
     const keyring = this
-    const seed = this.secret.slice(0, 32)
+    const seed = crypto.blake2b(this.secret)
 
     const { publicKey, secretKey } = crypto.ed25519.keyPair(seed)
 
