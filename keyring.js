@@ -10,7 +10,144 @@ const raf = require('random-access-file')
 // 34 = 2 + (2 * crypto_secretbox_MACBYTES)
 const kBoxHeaderSize = 34
 const kSignatureSize = 64
-const kHeaderSize = 8 + 8
+const kEntryHeaderSize = 8 + 8
+
+/**
+ * Computes and writes an ed25519 signature using a keyring's secret key
+ * and the computed Merkle roots for a key ring. The signature is stored in
+ * the keyring's storage at offset 0 and is 64 bytes wide.
+ * @public
+ * @param {Object} storage
+ * @param {Buffer} secretKey
+ * @param {?(Function)} cb
+ * @return {Promise<Buffer>}
+ */
+function computeSignature(storage, secretKey, cb) {
+  if (!storage || 'object' !== typeof storage) {
+    throw new TypeError('computeSignature: Expecting storage to be an object.')
+  }
+
+  if (!secretKey || false === isBuffer(secretKey)) {
+    // eslint-disable-next-line function-paren-newline
+    throw new TypeError(
+      'computeSignature: Expecting secret key to be a buffer.')
+  }
+
+  if (64 !== secretKey.length) {
+    // eslint-disable-next-line function-paren-newline
+    throw new TypeError(
+      'computeSignature: Expecting secret key to be 64 bytes.')
+  }
+
+  checkCallback(cb)
+  // eslint-disable-next-line no-param-reassign
+  cb = ensureCallback(cb)
+
+  return computeRoots(storage, onroots)
+
+  function onroots(err, roots) {
+    if (err) {
+      cb(err)
+    } else if (roots && roots.length) {
+      if (secretKey) {
+        const signature = crypto.ed25519.sign(roots, secretKey)
+        storage.write(0, signature, onwrite)
+      } else {
+        onwrite(null)
+      }
+    } else {
+      process.nextTick(cb, null, null)
+    }
+  }
+
+  function onwrite(err) {
+    if (err) {
+      cb(err)
+    } else {
+      statStorage(storage, onstat)
+    }
+  }
+
+  function onstat(err, stat) {
+    if (err) {
+      cb(err)
+    } else if (stat.size >= kSignatureSize) {
+      storage.read(0, kSignatureSize, cb)
+    } else {
+      process.nextTick(cb, null, null)
+    }
+  }
+}
+
+/**
+ * Computes the merkle tree roots of the keys found in
+ * a key ring.
+ * @public
+ * @param {Object} storage
+ * @param {?(Function)} cb
+ * @return {Promise<Buffer>}
+ */
+function computeRoots(storage, cb) {
+  if (!storage || 'object' !== typeof storage) {
+    throw new TypeError('computeSignature: Expecting storage to be an object.')
+  }
+
+  checkCallback(cb)
+
+  const tree = merkle({ leaf, parent })
+
+  // read first entry header after where signature will be
+  let off = kSignatureSize
+
+  return new Promise((resolve, reject) => {
+    // eslint-disable-next-line no-param-reassign
+    cb = ensureCallback(cb, resolve, reject)
+
+    process.nextTick(seek, kEntryHeaderSize)
+
+    function seek(size, next) {
+      statStorage(storage, onstat)
+
+      function onstat(err, stat) {
+        if (err) {
+          cb(err)
+        } else if (off + size <= stat.size) {
+          storage.read(off, size, next || onread)
+          off += size
+        } else {
+          const roots = Buffer.concat(tree.roots.map(({ hash }) => hash))
+          cb(null, roots)
+        }
+      }
+    }
+
+    function onread(err, buf) {
+      if (err) {
+        cb(err)
+      } else {
+        const length = crypto.uint64.decode(buf)
+        seek(length, onentry)
+      }
+    }
+
+    function onentry(err, entry) {
+      if (err) {
+        cb(err)
+      } else {
+        tree.next(entry)
+        seek(kEntryHeaderSize)
+      }
+    }
+  })
+
+  function leaf(node) {
+    return crypto.blake2b(node.data)
+  }
+
+  function parent(left, right) {
+    return crypto.blake2b(Buffer.concat([ left.hash, right.hash ]))
+  }
+}
 
 /**
  * The Keyring class implements a secure append only list of named keys.
@@ -62,15 +199,15 @@ class Keyring extends EventEmitter {
       throw new TypeError('Keyring: Expecting storage.open() to be a function.')
     }
 
-    if ('function' !== typeof storage.stat) {
+    if (storage.statable && 'function' !== typeof storage.stat) {
       throw new TypeError('Keyring: Expecting storage.stat() to be a function.')
     }
 
-    if ('function' !== typeof storage.read) {
+    if (storage.readable && 'function' !== typeof storage.read) {
       throw new TypeError('Keyring: Expecting storage.read() to be a function.')
     }
 
-    if ('function' !== typeof storage.write) {
+    if (storage.writable && 'function' !== typeof storage.write) {
       // eslint-disable-next-line function-paren-newline
       throw new TypeError(
         'Keyring: Expecting storage.write() to be a function.')
@@ -142,7 +279,17 @@ class Keyring extends EventEmitter {
       if (err) {
         keyring.emit('error', err)
       } else {
-        keyring.proof(onproof)
+        statStorage(storage, onstat)
+      }
+    }
+
+    function onstat(err, stat) {
+      if (err) {
+        keyring.emit('error', err)
+      } else if (stat && stat.size >= kSignatureSize) {
+        storage.read(0, kSignatureSize, onproof)
+      } else {
+        keyring.emit('ready')
       }
     }
 
@@ -150,7 +297,7 @@ class Keyring extends EventEmitter {
       if (err) {
         keyring.emit('error', err)
       } else {
-        computeRoots(keyring, onroots)
+        computeRoots(storage, onroots)
       }
 
       // eslint-disable-next-line no-shadow
@@ -233,9 +380,12 @@ class Keyring extends EventEmitter {
    */
   ready(cb) {
     const { isReady } = this
-    // eslint-disable-next-line no-param-reassign
-    cb = ensureCallback(cb)
+
+    checkCallback(cb)
     return new Promise((resolve) => {
+      // eslint-disable-next-line no-param-reassign
+      cb = ensureCallback(cb, resolve)
+
       if (isReady) {
         process.nextTick(onready)
       } else {
@@ -243,8 +393,7 @@ class Keyring extends EventEmitter {
       }
 
       function onready() {
-        cb()
-        resolve()
+        cb(null)
       }
     })
   }
@@ -257,31 +406,28 @@ class Keyring extends EventEmitter {
    */
   proof(cb) {
     const { storage } = this
-    // eslint-disable-next-line no-param-reassign
-    cb = ensureCallback(cb)
 
+    checkCallback(cb)
     return new Promise((resolve, reject) => {
-      this.stat(onstat)
+      // eslint-disable-next-line no-param-reassign
+      cb = ensureCallback(cb, resolve, reject)
+
+      this.ready(() => {
+        statStorage(storage, onstat)
+      })
 
       function onstat(err, stat) {
         if (err) {
           cb(err)
-          reject(err)
         } else if (stat.size >= kSignatureSize) {
           storage.read(0, kSignatureSize, onproof)
         } else {
           cb(null, null)
-          resolve(null)
         }
       }
 
       function onproof(err, proof) {
         cb(err, proof)
-        if (err) {
-          reject(err)
-        } else {
-          resolve(proof)
-        }
       }
     })
   }
@@ -293,24 +439,18 @@ class Keyring extends EventEmitter {
    */
   stat(cb) {
     const { storage } = this
-    // eslint-disable-next-line no-param-reassign
-    cb = ensureCallback(cb)
+
+    checkCallback(cb)
     return new Promise((resolve, reject) => {
-      if ('number' === typeof storage.length) {
-        process.nextTick(onstat, null, { size: storage.length })
-      } else if (storage.statable) {
-        storage.stat(onstat)
-      } else {
-        process.nextTick(onstat, null, { size: 0 })
-      }
+      // eslint-disable-next-line no-param-reassign
+      cb = ensureCallback(cb, resolve, reject)
+
+      this.ready(() => {
+        statStorage(storage, onstat)
+      })
 
       function onstat(err, stat) {
         cb(err, stat)
-        if (err) {
-          reject(err)
-        } else {
-          resolve(stat)
-        }
       }
     })
   }
@@ -336,32 +476,35 @@ class Keyring extends EventEmitter {
       throw new TypeError('Keyring: Expecting key to be a buffer.')
     }
 
-    // eslint-disable-next-line no-param-reassign
-    cb = ensureCallback(cb)
+    checkCallback(cb)
     return new Promise((resolve, reject) => {
-      const stream = this.createWriteStream(name)
-      const parts = split(key, 4 * 1024)
+      // eslint-disable-next-line no-param-reassign
+      cb = ensureCallback(cb, resolve, reject)
 
-      stream.once('error', onerror)
-      stream.once('put', onput)
-      stream.once('put', () => {
-        this.emit('append', name)
+      this.ready(() => {
+        const stream = this.createWriteStream(name)
+        const parts = split(key, 4 * 1024)
+
+        stream.once('error', onerror)
+        stream.once('put', onput)
+        stream.once('put', () => {
+          this.emit('append', name)
+        })
+
+        for (const part of parts) {
+          stream.write(part)
+        }
+
+        stream.end()
       })
 
-      for (const part of parts) {
-        stream.write(part)
-      }
-
-      stream.end()
-
       function onerror(err) {
-        reject(err)
+        cb(err)
       }
 
       // eslint-disable-next-line no-shadow
       function onput(name, hash) {
         cb(null, { name, hash })
-        resolve({ name, hash })
       }
     })
   }
@@ -379,20 +522,18 @@ class Keyring extends EventEmitter {
       throw new TypeError('Keyring: Expecting name to be a string.')
     }
 
-    // eslint-disable-next-line no-param-reassign
-    cb = ensureCallback(cb)
+    checkCallback(cb)
     return new Promise((resolve, reject) => {
-      const stream = this.createReadStream(name)
-      collect(stream, oncollect)
+      // eslint-disable-next-line no-param-reassign
+      cb = ensureCallback(cb, resolve, reject)
+
+      this.ready(() => {
+        const stream = this.createReadStream(name)
+        collect(stream, oncollect)
+      })
 
       function oncollect(err, result) {
         cb(err, result)
-
-        if (err) {
-          reject(err)
-        } else {
-          resolve(result)
-        }
       }
     })
   }
@@ -410,22 +551,23 @@ class Keyring extends EventEmitter {
       throw new TypeError('Keyring: Expecting name to be a string.')
     }
 
-    // eslint-disable-next-line no-param-reassign
-    cb = ensureCallback(cb)
+    checkCallback(cb)
     return new Promise((resolve, reject) => {
-      this.get(name, onget)
+      // eslint-disable-next-line no-param-reassign
+      cb = ensureCallback(cb, resolve, reject)
+
+      this.ready(() => {
+        this.get(name, onget)
+      })
 
       function onget(err, entry) {
         if (err) {
           cb(err)
-          reject(err)
         } else if (!entry || 0 === entry.length) {
           const error = new Error(`Keyring: No such entry exists: '${name}'`)
           cb(error)
-          reject(error)
         } else {
           cb(null)
-          resolve()
         }
       }
     })
@@ -444,13 +586,17 @@ class Keyring extends EventEmitter {
       throw new TypeError('Keyring: Expecting name to be a string.')
     }
 
-    // eslint-disable-next-line no-param-reassign
-    cb = ensureCallback(cb)
+    checkCallback(cb)
     return new Promise((resolve) => {
-      this.access(name, onaccess)
+      // eslint-disable-next-line no-param-reassign
+      cb = ensureCallback(cb, resolve)
+
+      this.ready(() => {
+        this.access(name, onaccess)
+      })
+
       function onaccess(err) {
         cb(null, null === err)
-        resolve(null === err)
       }
     })
   }
@@ -463,18 +609,19 @@ class Keyring extends EventEmitter {
    * @return {Promise<Buffer>}
    */
   computeRoots(cb) {
-    // eslint-disable-next-line no-param-reassign
-    cb = ensureCallback(cb)
+    const { storage } = this
+
+    checkCallback(cb)
     return new Promise((resolve, reject) => {
-      computeRoots(this, onroots)
+      // eslint-disable-next-line no-param-reassign
+      cb = ensureCallback(cb, resolve, reject)
+
+      this.ready(() => {
+        computeRoots(storage, onroots)
+      })
 
       function onroots(err, roots) {
         cb(err, roots)
-        if (err) {
-          reject(err)
-        } else {
-          resolve(roots)
-        }
       }
     })
   }
@@ -488,18 +635,18 @@ class Keyring extends EventEmitter {
    * @return {Promise<Buffer>}
    */
   computeSignature(cb) {
-    // eslint-disable-next-line no-param-reassign
-    cb = ensureCallback(cb)
+    const { storage, secretKey } = this
+
     return new Promise((resolve, reject) => {
-      computeSignature(this, onsignature)
+      // eslint-disable-next-line no-param-reassign
+      cb = ensureCallback(cb, resolve, reject)
+
+      this.ready(() => {
+        computeSignature(storage, secretKey, onsignature)
+      })
 
       function onsignature(err, signature) {
         cb(err, signature)
-        if (err) {
-          reject(err)
-        } else {
-          resolve(signature)
-        }
       }
     })
   }
@@ -521,7 +668,6 @@ class Keyring extends EventEmitter {
     }
 
     const { storage } = this
-    const keyring = this
     const nonce = this.nonce.slice(0, 24)
     const hash = this.hash(name)
     const key = this.key.slice(0, 32)
@@ -530,13 +676,15 @@ class Keyring extends EventEmitter {
 
     let off = kSignatureSize
 
-    // read first entry header after signature
-    process.nextTick(seek, kHeaderSize)
+    this.ready(() => {
+      // read first entry header after signature
+      process.nextTick(seek, kEntryHeaderSize)
+    })
 
     return stream
 
     function seek(size, next) {
-      keyring.stat(onstat)
+      statStorage(storage, onstat)
 
       function onstat(err, stat) {
         if (off + size <= stat.size) {
@@ -567,7 +715,7 @@ class Keyring extends EventEmitter {
             stream.write(head)
             stream.end(body)
           } else {
-            seek(kHeaderSize)
+            seek(kEntryHeaderSize)
           }
         })
       }
@@ -590,7 +738,7 @@ class Keyring extends EventEmitter {
       throw new TypeError('Keyring: Not writable')
     }
 
-    const { storage, lock } = this
+    const { storage, secretKey, lock } = this
     const keyring = this
     const nonce = this.nonce.slice(0, 24)
     const hash = this.hash(name)
@@ -601,7 +749,9 @@ class Keyring extends EventEmitter {
     let buffer = null
     let length = 0
 
-    lock(onlock)
+    this.ready(() => {
+      lock(onlock)
+    })
 
     return stream
 
@@ -625,7 +775,7 @@ class Keyring extends EventEmitter {
           release(ondone, err)
         } else {
           buffer = buf
-          keyring.stat(onstat)
+          statStorage(storage, onstat)
         }
       }
 
@@ -648,7 +798,12 @@ class Keyring extends EventEmitter {
           hash.copy(entry, 8)
           buffer.copy(entry, 8 + 8)
 
-          storage.write(offset, entry, onwrite)
+          try {
+            storage.write(offset, entry, onwrite)
+            // eslint-disable-next-line no-shadow
+          } catch (err) {
+            release(ondone, err)
+          }
         }
       }
 
@@ -656,7 +811,7 @@ class Keyring extends EventEmitter {
         if (err) {
           release(ondone, err)
         } else {
-          computeSignature(keyring, onsignature)
+          computeSignature(storage, secretKey, onsignature)
         }
       }
 
@@ -671,132 +826,53 @@ class Keyring extends EventEmitter {
   }
 }
 
-/**
- * Computes and writes an ed25519 signature using a keyring's secret key
- * and the computed Merkle roots for a key ring. The signature is stored in
- * the keyring's storage at offset 0 and is 64 bytes wide.
- * @private
- * @param {Keyring} keyring
- * @param {Function} cb
- */
-function computeSignature(keyring, cb) {
-  const { storage, secretKey } = keyring
-
-  return computeRoots(keyring, onroots)
-
-  function onroots(err, roots) {
-    if (err) {
-      cb(err)
-    } else if (roots && roots.length) {
-      if (secretKey) {
-        const signature = crypto.ed25519.sign(roots, keyring.secretKey)
-        storage.write(0, signature, onwrite)
-      } else {
-        onwrite(null)
-      }
-    } else {
-      process.nextTick(cb, null, null)
-    }
-  }
-
-  function onwrite(err) {
-    if (err) {
-      cb(err)
-    } else {
-      keyring.stat(onstat)
-    }
-  }
-
-  function onstat(err, stat) {
-    if (err) {
-      cb(err)
-    } else if (stat.size >= kSignatureSize) {
-      storage.read(0, kSignatureSize, cb)
-    } else {
-      process.nextTick(cb, null, null)
-    }
+function checkCallback(cb) {
+  if (undefined !== cb && 'function' !== typeof cb) {
+    throw new TypeError('Expecting callback to be a function.')
   }
 }
-
-/**
- * Computes the merkle tree roots of the keys found in
- * a key ring.
- * @private
- * @param {Keyring} keyring
- * @param {Function} cb
- */
-function computeRoots(keyring, cb) {
-  const { storage } = keyring
-  const t = tree()
-
-  // read first entry header after where signature will be
-  let off = kSignatureSize
-  process.nextTick(seek, kHeaderSize)
-
-  function seek(size, next) {
-    keyring.stat(onstat)
-
-    function onstat(err, stat) {
-      if (err) {
-        cb(err)
-      } else if (off + size < stat.size) {
-        storage.read(off, size, next || onread)
-        off += size
-      } else {
-        const roots = Buffer.concat(t.roots.map(({ hash }) => hash))
-        cb(null, roots)
-      }
-    }
-  }
-
-  function onread(err, buf) {
-    if (err) {
-      cb(err)
-    } else {
-      const length = crypto.uint64.decode(buf)
-      seek(length, onentry)
-    }
-  }
-
-  function onentry(err, entry) {
-    if (err) {
-      cb(err)
-    } else {
-      t.next(entry)
-      seek(kHeaderSize)
-    }
-  }
-}
-
-/**
- * Returns a Merkle tree generator that computes BLAKE2b
- * hashes of leaf and parent nodes.
- * @private
- * @return {Iterator}
- */
-function tree() {
-  return merkle({ leaf, parent })
-
-  function leaf(node) {
-    return crypto.blake2b(node.data)
-  }
-
-  function parent(left, right) {
-    return crypto.blake2b(Buffer.concat([ left.hash, right.hash ]))
-  }
-}
-
-// NO-OP
-function noop() { }
 
 /**
  * Ensures a callback for async functions.
  * @private
+ * @throws TypeError
  */
-function ensureCallback(cb) {
-  return 'function' === typeof cb ? cb : noop
+function ensureCallback(cb, resolve, reject) {
+  checkCallback(cb)
+
+  return (err, result) => {
+    if ('function' === typeof cb) {
+      cb(err, result)
+    } else if (err && 'function' === typeof reject) {
+      reject(err)
+    }
+
+    if (!err && 'function' === typeof resolve) {
+      resolve(result)
+    }
+  }
+}
+
+/**
+ * Normalizes a stat call for a storage.
+ * @private
+ */
+function statStorage(storage, cb) {
+  if (storage.statable && 'function' === typeof storage.stat) {
+    storage.stat(cb)
+  } else if ('number' === typeof storage.length) {
+    process.nextTick(cb, null, { size: storage.length })
+  } else {
+    process.nextTick(cb, null, { size: 0 })
+  }
 }
 
 module.exports = {
-  Keyring
+  computeSignature,
+  computeRoots,
+  Keyring,
+
+  kEntryHeaderSize,
+  kBoxHeaderSize,
+  kSignatureSize,
 }
