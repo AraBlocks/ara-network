@@ -4,7 +4,6 @@ const collect = require('collect-stream')
 const merkle = require('merkle-tree-stream/generator')
 const crypto = require('ara-crypto')
 const mutex = require('mutexify')
-const split = require('split-buffer')
 const raf = require('random-access-file')
 
 // 34 = 2 + (2 * crypto_secretbox_MACBYTES)
@@ -23,56 +22,43 @@ const kEntryHeaderSize = 8 + 8
  * @return {Promise<Buffer>}
  */
 function computeSignature(storage, secretKey, cb) {
-  if (!storage || 'object' !== typeof storage) {
-    throw new TypeError('computeSignature: Expecting storage to be an object.')
-  }
-
-  if (!secretKey || false === isBuffer(secretKey)) {
-    // eslint-disable-next-line function-paren-newline
-    throw new TypeError(
-      'computeSignature: Expecting secret key to be a buffer.')
-  }
-
-  if (64 !== secretKey.length) {
-    // eslint-disable-next-line function-paren-newline
-    throw new TypeError(
-      'computeSignature: Expecting secret key to be 64 bytes.')
-  }
-
   checkCallback(cb)
-  // eslint-disable-next-line no-param-reassign
-  cb = ensureCallback(cb)
 
-  return computeRoots(storage, onroots)
+  return new Promise((resolve, reject) => {
+    // eslint-disable-next-line no-param-reassign
+    cb = ensureCallback(cb, resolve, reject)
+
+    if (!storage || 'object' !== typeof storage) {
+      cb(new TypeError('computeSignature: Expecting storage to be an object.'))
+      return
+    }
+
+    if (!secretKey || false === isBuffer(secretKey)) {
+      // eslint-disable-next-line function-paren-newline
+      cb(new TypeError(
+        'computeSignature: Expecting secret key to be a buffer.'))
+      return
+    }
+
+    if (64 !== secretKey.length) {
+      // eslint-disable-next-line function-paren-newline
+      cb(new TypeError(
+        'computeSignature: Expecting secret key to be 64 bytes.'))
+      return
+    }
+
+    computeRoots(storage, onroots)
+  })
 
   function onroots(err, roots) {
     if (err) {
       cb(err)
-    } else if (roots && roots.length) {
-      if (secretKey) {
-        const signature = crypto.ed25519.sign(roots, secretKey)
-        storage.write(0, signature, onwrite)
-      } else {
-        onwrite(null)
-      }
-    } else {
-      process.nextTick(cb, null, null)
-    }
-  }
-
-  function onwrite(err) {
-    if (err) {
-      cb(err)
-    } else {
-      statStorage(storage, onstat)
-    }
-  }
-
-  function onstat(err, stat) {
-    if (err) {
-      cb(err)
-    } else if (stat.size >= kSignatureSize) {
-      storage.read(0, kSignatureSize, cb)
+    } else if (secretKey && roots && roots.length) {
+      const signature = crypto.ed25519.sign(roots, secretKey)
+      // eslint-disable-next-line no-shadow
+      storage.write(0, signature, (err) => {
+        cb(err, signature)
+      })
     } else {
       process.nextTick(cb, null, null)
     }
@@ -88,20 +74,21 @@ function computeSignature(storage, secretKey, cb) {
  * @return {Promise<Buffer>}
  */
 function computeRoots(storage, cb) {
-  if (!storage || 'object' !== typeof storage) {
-    throw new TypeError('computeSignature: Expecting storage to be an object.')
-  }
-
   checkCallback(cb)
-
-  const tree = merkle({ leaf, parent })
-
-  // read first entry header after where signature will be
-  let off = kSignatureSize
 
   return new Promise((resolve, reject) => {
     // eslint-disable-next-line no-param-reassign
     cb = ensureCallback(cb, resolve, reject)
+
+    if (!storage || 'object' !== typeof storage) {
+      cb(new TypeError('computeRoots: Expecting storage to be an object.'))
+      return
+    }
+
+    const tree = merkle({ leaf, parent })
+
+    // read first entry header after where signature will be
+    let off = kSignatureSize
 
     process.nextTick(seek, kEntryHeaderSize)
 
@@ -114,9 +101,11 @@ function computeRoots(storage, cb) {
         } else if (off + size <= stat.size) {
           storage.read(off, size, next || onread)
           off += size
-        } else {
+        } else if (tree.roots.length) {
           const roots = Buffer.concat(tree.roots.map(({ hash }) => hash))
           cb(null, roots)
+        } else {
+          cb(new Error('computeRoots: Empty storage.'))
         }
       }
     }
@@ -266,11 +255,18 @@ class Keyring extends EventEmitter {
 
     if (true === opts.readonly) {
       this.storage.preferReadonly = true
+      process.nextTick(onopen, null)
+      if ('function' !== typeof storage._openReadnnly) {
+        // eslint-disable-next-line no-param-reassign
+        storage._openReadonly = (req) => {
+          req.callback(null)
+        }
+      }
     } else {
       this.storage.preferReadonly = false
+      this.storage.open(onopen)
     }
 
-    this.storage.open(onopen)
     this.once('ready', () => {
       this.isReady = true
     })
@@ -338,7 +334,7 @@ class Keyring extends EventEmitter {
    * @type {Boolean}
    */
   get writable() {
-    return this.storage.writable
+    return false === this.storage.preferReadonly && this.storage.writable
   }
 
   /**
@@ -468,34 +464,36 @@ class Keyring extends EventEmitter {
    * @throws TypeError
    */
   append(name, key, cb) {
-    if (!name || 'string' !== typeof name) {
-      throw new TypeError('Keyring: Expecting name to be a string.')
-    }
-
-    if (false === isBuffer(key)) {
-      throw new TypeError('Keyring: Expecting key to be a buffer.')
-    }
-
     checkCallback(cb)
+
     return new Promise((resolve, reject) => {
       // eslint-disable-next-line no-param-reassign
       cb = ensureCallback(cb, resolve, reject)
 
+      if (!name || 'string' !== typeof name) {
+        cb(new TypeError('Keyring: Expecting name to be a string.'))
+        return
+      }
+
+      if (false === isBuffer(key)) {
+        cb(new TypeError('Keyring: Expecting key to be a buffer.'))
+        return
+      }
+
       this.ready(() => {
-        const stream = this.createWriteStream(name)
-        const parts = split(key, 4 * 1024)
+        try {
+          const stream = this.createWriteStream(name)
 
-        stream.once('error', onerror)
-        stream.once('put', onput)
-        stream.once('put', () => {
-          this.emit('append', name)
-        })
+          stream.once('error', onerror)
+          stream.once('put', onput)
+          stream.once('put', () => {
+            this.emit('append', name)
+          })
 
-        for (const part of parts) {
-          stream.write(part)
+          stream.end(key)
+        } catch (err) {
+          onerror(err)
         }
-
-        stream.end()
       })
 
       function onerror(err) {
