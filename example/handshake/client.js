@@ -1,5 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies */
-const { decrypt, unpack } = require('../../keys')
+const { unpack, keyRing } = require('../../keys')
 const { createChannel } = require('../../discovery/channel')
 const { Handshake } = require('../../handshake')
 const { readFile } = require('fs')
@@ -11,7 +11,7 @@ const crypto = require('ara-crypto')
 const pump = require('pump')
 const pify = require('pify')
 const net = require('net')
-const rc = require('../../rc')()
+const rc = require('../../rc')(require('ara-identity/rc')())
 
 require('ara-identity/rc')()
 
@@ -32,6 +32,10 @@ async function configure(opts, program) {
       alias: 's',
       describe: 'Shared secret key for network keys associated with this node.'
     })
+    .option('name', {
+      alias: 'n',
+      describe: 'Human readable network keys name.'
+    })
     .option('keys', {
       alias: 'k',
       describe: 'Path to ARA network keys'
@@ -42,6 +46,7 @@ async function configure(opts, program) {
   }
 
   conf.keys = argv.keys
+  conf.name = argv.name
   conf.secret = argv.secret
   conf.identity = argv.identity
 }
@@ -63,15 +68,15 @@ async function start() {
   password = crypto.blake2b(Buffer.from(password))
 
   const hash = crypto.blake2b(publicKey).toString('hex')
-  const path = resolve(rc.network.identity.root, hash, 'keys')
+  const path = resolve(rc.network.identity.root, hash, 'keystore/ara')
   const secret = Buffer.from(conf.secret)
   const keystore = JSON.parse(await pify(readFile)(path, 'utf8'))
-
   const secretKey = crypto.decrypt(keystore, { key: password.slice(0, 16) })
 
-  const keys = decrypt(JSON.parse(await pify(readFile)(conf.keys)), { secret })
+  const keyring = keyRing(conf.keys, { secret })
+  const buffer = await keyring.get(conf.name)
+  const unpacked = unpack({ buffer })
 
-  const unpacked = unpack({ buffer: keys })
   const { discoveryKey } = unpacked
 
   channel.join(discoveryKey)
