@@ -1,5 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies */
-const { decrypt, unpack } = require('../../keys')
+const { unpack, keyRing } = require('../../keys')
 const { createChannel } = require('../../discovery/channel')
 const { info, warn } = require('ara-console')
 const { Handshake } = require('../../handshake')
@@ -11,7 +11,7 @@ const crypto = require('ara-crypto')
 const pify = require('pify')
 const pump = require('pump')
 const net = require('net')
-const rc = require('../../rc')()
+const rc = require('../../rc')(require('ara-identity/rc')())
 
 require('ara-identity/rc')()
 
@@ -32,9 +32,13 @@ async function configure(opts, program) {
       alias: 's',
       describe: 'Shared secret key for network keys associated with this node.'
     })
+    .option('name', {
+      alias: 'n',
+      describe: 'Human readable network keys name.'
+    })
     .option('keys', {
       alias: 'k',
-      describe: 'Path to ARA network keys'
+      describe: 'Path to keyring'
     })
     .option('port', {
       alias: 'p',
@@ -42,12 +46,13 @@ async function configure(opts, program) {
       describe: 'Port this node should connect on.'
     })
 
-  if (argv.identity && 0 != argv.identity.indexOf('did:ara:')) {
+  if (argv.identity && 0 !== argv.identity.indexOf('did:ara:')) {
     argv.identity = `did:ara:${argv.identity}`
   }
 
   conf.port = argv.port
   conf.keys = argv.keys
+  conf.name = argv.name
   conf.secret = argv.secret
   conf.identity = argv.identity
 }
@@ -69,16 +74,15 @@ async function start() {
   password = crypto.blake2b(Buffer.from(password))
 
   const hash = crypto.blake2b(publicKey).toString('hex')
-  const path = resolve(rc.network.identity.root, hash, 'keys')
+  const path = resolve(rc.network.identity.root, hash, 'keystore/ara')
   const secret = Buffer.from(conf.secret)
   const keystore = JSON.parse(await pify(readFile)(path, 'utf8'))
-
   const secretKey = crypto.decrypt(keystore, { key: password.slice(0, 16) })
-  const keys = decrypt(JSON.parse(await pify(readFile)(conf.keys)), {
-    secret, secretKey
-  })
 
-  const unpacked = unpack({ buffer: keys })
+  const keyring = keyRing(conf.keys, { secret: secretKey })
+  const buffer = await keyring.get(conf.name)
+  const unpacked = unpack({ buffer })
+
   const { discoveryKey } = unpacked
   const server = net.createServer(onconnection)
 
