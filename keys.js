@@ -688,6 +688,14 @@ function keyRing0(storage, opts) {
     opts.decrypt = defaultDecrypt
   }
 
+  // ensure a 64 byte buffer if less than 64 bytes
+  if (isBuffer(opts.secret) && opts.secret.length < 64) {
+    const secret = Buffer.alloc(64).fill(0)
+    opts.secret.copy(secret)
+    // eslint-disable-next-line no-param-reassign
+    opts.secret = secret
+  }
+
   return new Keyring(storage, opts)
 
   function defaultEncrypt(buffer, name, keyring) {
