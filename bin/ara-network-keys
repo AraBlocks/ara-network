@@ -105,8 +105,6 @@ void async function main() {
     return onfatal(new Error('Invalid passphrase'))
   }
 
-  const keyPair = keys.keyPair({ secret, publicKey, secretKey })
-
   if (argv.out) {
     argv.out = resolve(argv.out)
 
@@ -123,6 +121,7 @@ void async function main() {
       await publicKeyring.append(argv.name, buffer.slice(0, keys.PK_SIZE))
     }
   } else {
+    const keyPair = keys.keyPair({ secret, publicKey, secretKey })
     // eslint-disable-next-line no-console
     console.log(JSON.stringify(keyPair, null, '  '))
   }
