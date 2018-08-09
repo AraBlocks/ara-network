@@ -516,15 +516,6 @@ test.cb('Keyring#get(name, cb) gets a key by name', (t) => {
   }
 })
 
-test('Keyring#createWriteStream(name) throws on bad input', (t) => {
-  const secret = crypto.randomBytes(64)
-  const keyring = new Keyring(ram(), { secret })
-  t.throws(() => keyring.createWriteStream(), TypeError)
-  t.throws(() => keyring.createWriteStream(''), TypeError)
-  t.throws(() => keyring.createWriteStream(null), TypeError)
-  t.throws(() => keyring.createWriteStream(1234), TypeError)
-})
-
 test('Keyring(storage, opts) emits ready for empty instance', async (t) => {
   const secret = crypto.randomBytes(64)
   const keyring = new Keyring(ram(), { secret })
