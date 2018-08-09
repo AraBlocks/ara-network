@@ -6,6 +6,10 @@ const defaults = () => ({
   network: {
     secrets: {
       root: resolve(rc().data.root, 'secrets')
+    },
+
+    keyrings: {
+      root: resolve(rc().data.root, 'keyrings')
     }
   }
 })
