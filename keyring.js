@@ -1,9 +1,11 @@
 const { EventEmitter } = require('events')
 const isBuffer = require('is-buffer')
 const collect = require('collect-stream')
+const through = require('through2')
 const merkle = require('merkle-tree-stream/generator')
 const crypto = require('ara-crypto')
 const mutex = require('mutexify')
+const pump = require('pump')
 const raf = require('random-access-file')
 
 // 34 = 2 + (2 * crypto_secretbox_MACBYTES)
@@ -153,6 +155,10 @@ class Keyring extends EventEmitter {
    * @param {?(Buffer)} opts.key
    * @param {?(Buffer)} opts.nonce
    * @param {?(Buffer)} opts.secret
+   * @param {?(Function)} opts.pack
+   * @param {?(Function)} opts.unpack
+   * @param {?(Function)} opts.encrypt
+   * @param {?(Function)} opts.decrypt
    * @param {?(Boolean)} [opts.readonly = false]
    * @throws TypeError
    */
@@ -252,6 +258,22 @@ class Keyring extends EventEmitter {
     this.storage = storage
     this.isReady = false
     this.lock = mutex()
+
+    if ('function' === typeof opts.encrypt) {
+      this.encrypt = opts.encrypt
+    }
+
+    if ('function' === typeof opts.decrypt) {
+      this.decrypt = opts.decrypt
+    }
+
+    if ('function' === typeof opts.pack) {
+      this.pack = opts.pack
+    }
+
+    if ('function' === typeof opts.unpack) {
+      this.unpack = opts.unpack
+    }
 
     if (true === opts.readonly) {
       this.storage.preferReadonly = true
@@ -355,6 +377,46 @@ class Keyring extends EventEmitter {
    */
   get statable() {
     return this.storage.statable
+  }
+
+  /**
+   * Will be true if entries are packable into storage.
+   * @public
+   * @accessor
+   * @type {Boolean}
+   */
+  get packable() {
+    return 'function' === typeof this.pack
+  }
+
+  /**
+   * Will be true if entries are unpackable from storage.
+   * @public
+   * @accessor
+   * @type {Boolean}
+   */
+  get unpackable() {
+    return 'function' === typeof this.unpack
+  }
+
+  /**
+   * Will be true if entries are encryptable into storage.
+   * @public
+   * @accessor
+   * @type {Boolean}
+   */
+  get encryptable() {
+    return 'function' === typeof this.encrypt
+  }
+
+  /**
+   * Will be true if entries are decryptable from storage.
+   * @public
+   * @accessor
+   * @type {Boolean}
+   */
+  get decryptable() {
+    return 'function' === typeof this.decrypt
   }
 
   /**
@@ -666,15 +728,18 @@ class Keyring extends EventEmitter {
     }
 
     const { storage } = this
+    const keyring = this
     const nonce = this.nonce.slice(0, 24)
     const hash = this.hash(name)
     const key = this.key.slice(0, 32)
 
-    const stream = crypto.createUnboxStream({ nonce, key })
+    const unbox = crypto.createUnboxStream({ nonce, key })
+    const stream = through(onwrite)
 
     let off = kSignatureSize
 
     this.ready(() => {
+      pump(unbox, stream)
       // read first entry header after signature
       process.nextTick(seek, kEntryHeaderSize)
     })
@@ -689,14 +754,28 @@ class Keyring extends EventEmitter {
           storage.read(off, size, next || onread)
           off += size
         } else {
-          stream.end()
+          unbox.end()
         }
       }
     }
 
+    function onwrite(chunk, enc, done) {
+      if (keyring.decryptable) {
+        // eslint-disable-next-line no-param-reassign
+        chunk = keyring.decrypt(chunk, name, keyring)
+      }
+
+      if (keyring.unpackable) {
+        // eslint-disable-next-line no-param-reassign
+        chunk = keyring.unpack(chunk, name, keyring)
+      }
+
+      done(null, chunk)
+    }
+
     function onread(err, buf) {
       if (err) {
-        stream.emit('error', err)
+        unbox.emit('error', err)
       } else {
         const header = {
           length: crypto.uint64.decode(buf.slice(0, 8)),
@@ -706,12 +785,12 @@ class Keyring extends EventEmitter {
         // eslint-disable-next-line no-shadow
         seek(header.length, (err, entry) => {
           if (err) {
-            stream.emit('error', err)
+            unbox.emit('error', err)
           } else if (0 === Buffer.compare(hash, header.hash)) {
             const head = entry.slice(0, kBoxHeaderSize)
             const body = entry.slice(kBoxHeaderSize)
-            stream.write(head)
-            stream.end(body)
+            unbox.write(head)
+            unbox.end(body)
           } else {
             seek(kEntryHeaderSize)
           }
@@ -742,7 +821,8 @@ class Keyring extends EventEmitter {
     const hash = this.hash(name)
     const key = this.key.slice(0, 32)
 
-    const stream = crypto.createBoxStream({ nonce, key })
+    const stream = through(onwrite)
+    const box = crypto.createBoxStream({ nonce, key })
 
     let buffer = null
     let length = 0
@@ -757,6 +837,20 @@ class Keyring extends EventEmitter {
       stream.emit('error', err)
     }
 
+    function onwrite(chunk, enc, done) {
+      if (keyring.packable) {
+        // eslint-disable-next-line no-param-reassign
+        chunk = keyring.pack(chunk, name, keyring)
+      }
+
+      if (keyring.encryptable) {
+        // eslint-disable-next-line no-param-reassign
+        chunk = keyring.encrypt(chunk, name, keyring)
+      }
+
+      done(null, chunk)
+    }
+
     function ondone(err) {
       if (err) {
         onerror(err)
@@ -766,13 +860,14 @@ class Keyring extends EventEmitter {
     }
 
     function onlock(release) {
-      collect(stream, oncollect)
+      collect(pump(stream, box), oncollect)
 
       function oncollect(err, buf) {
         if (err) {
           release(ondone, err)
         } else {
           buffer = buf
+
           statStorage(storage, onstat)
         }
       }
