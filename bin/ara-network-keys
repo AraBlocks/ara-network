@@ -9,8 +9,7 @@ const crypto = require('ara-crypto')
 const debug = require('debug')('ara:network:keys')
 const keys = require('../keys')
 const pify = require('pify')
-const aid = require('ara-identity')
-const rc = require('../rc')()
+const rc = require('../rc')(require('ara-identity/rc')())
 const fs = require('fs')
 
 const $0 = basename(process.argv[1] || 'ara-network-keys')
@@ -32,11 +31,19 @@ const { argv } = program
     type: 'string',
     alias: 'i',
     describe: 'ARA Identity DID URI',
+    required: true
   })
   .option('secret', {
     type: 'string',
     alias: 's',
     describe: 'Shared secret key value or file path',
+    required: true
+  })
+  .option('name', {
+    type: 'string',
+    alias: 'n',
+    describe: 'Human readable name for network keys',
+    required: true
   })
   .option('out', {
     type: 'string',
@@ -44,6 +51,7 @@ const { argv } = program
     describe: 'Output file name',
   })
 
+// eslint-disable-next-line
 void async function main() {
   process.title = $0
 
@@ -65,18 +73,20 @@ void async function main() {
     if (stat.isFile()) {
       secret = await pify(fs.readFile)(argv.secret)
     }
-  } catch (err) {}
+  } catch (err) {
+    void err
+  }
 
-  let { password } = await inquirer.prompt([{
+  let { password } = await inquirer.prompt([ {
     type: 'password',
     name: 'password',
     message:
     'Please enter the passphrase associated with the signing identity.\n' +
     'Passphrase:'
-  }])
+  } ])
 
-  if (argv.identity && 0 != argv.identity.indexOf('did:ara:')) {
-    argv.identity = 'did:ara:' + argv.identity
+  if (argv.identity && 0 !== argv.identity.indexOf('did:ara:')) {
+    argv.identity = `did:ara:${argv.identity}`
   }
 
   const did = new DID(argv.identity)
@@ -84,45 +94,39 @@ void async function main() {
   password = crypto.blake2b(Buffer.from(password))
   publicKey = Buffer.from(did.identifier, 'hex')
 
+  // @TODO(jwerle): this should a function of AID
   const hash = crypto.blake2b(publicKey).toString('hex')
-  const path = resolve(rc.network.identity.root, hash, 'keys')
+  const path = resolve(rc.network.identity.root, hash, 'keystore/ara')
   const keystore = JSON.parse(await pify(fs.readFile)(path, 'utf8'))
 
   try {
     secretKey = crypto.decrypt(keystore, { key: password.slice(0, 16) })
   } catch (err) {
-    return onfatal(new Error("Invalid passphrase"))
+    return onfatal(new Error('Invalid passphrase'))
   }
 
   const keyPair = keys.keyPair({ secret, publicKey, secretKey })
 
   if (argv.out) {
     argv.out = resolve(argv.out)
-    await confirmOverwrite(argv.out)
-    await pify(fs.writeFile)(argv.out, JSON.stringify(keyPair.secretKey))
-    await pify(fs.writeFile)(argv.out + '.pub', JSON.stringify(keyPair.publicKey))
+
+    const buffer = keys.generate({ secret, publicKey, secretKey })
+
+    const secretKeyring = keys.keyRing(argv.out, { secret: secretKey })
+    const publicKeyring = keys.keyRing(`${argv.out}.pub`, { secret })
+
+    if (false === await secretKeyring.has(argv.name)) {
+      await secretKeyring.append(argv.name, buffer.slice(keys.PK_SIZE))
+    }
+
+    if (false === await publicKeyring.has(argv.name)) {
+      await publicKeyring.append(argv.name, buffer.slice(0, keys.PK_SIZE))
+    }
   } else {
+    // eslint-disable-next-line no-console
     console.log(JSON.stringify(keyPair, null, '  '))
   }
 }()
-
-async function confirmOverwrite(filename) {
-  if (argv.force) { return true }
-  try { await pify(fs.access)(filename) }
-  catch (err) { return true }
-  const { confirm } = await inquirer.prompt([{
-    type: 'confirm',
-    name: 'confirm',
-    default: false,
-    message:
-    `${filename} already exists.\n` +
-    "Overwrite?"
-  }])
-
-  if (false == confirm) {
-    onfatal(new Error(`Not removing file '${filename}'`))
-  }
-}
 
 function onfatal(err) {
   error('fatal:', err.message)
