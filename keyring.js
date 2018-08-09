@@ -796,7 +796,7 @@ class Keyring extends EventEmitter {
     const hash = this.hash(name)
     const key = this.key.slice(0, 32)
 
-    const stream = through(onwrite)
+    const stream = through(onthrough)
     const box = crypto.createBoxStream({ nonce, key })
 
     let buffer = null
@@ -812,7 +812,7 @@ class Keyring extends EventEmitter {
       stream.emit('error', err)
     }
 
-    function onwrite(chunk, enc, done) {
+    function onthrough(chunk, enc, done) {
       if (keyring.packable) {
         // eslint-disable-next-line no-param-reassign
         chunk = keyring.pack(chunk, name, keyring)
