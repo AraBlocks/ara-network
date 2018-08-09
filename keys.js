@@ -1,3 +1,4 @@
+const { Keyring } = require('./keyring')
 const isBuffer = require('is-buffer')
 const crypto = require('ara-crypto')
 
@@ -614,12 +615,102 @@ function keyPair0(opts) {
   return { publicKey, secretKey }
 }
 
+/**
+ * Generates a Keyring that encrypts and decrypts
+ * packed network keys.
+ * @public
+ * @see {@link Keyring}
+ * @param {String|Function|Object} storage
+ * @param {Object} opts
+ * @throws TypeError
+ * @return {Keyring}
+ */
+function keyRing(storage, opts) {
+  if (undefined === storage) {
+    throw new TypeError('keyRing: Storage cannot be undefined.')
+  }
+
+  if (null === storage) {
+    throw new TypeError('keyRing: Storage cannot be undefined.')
+  }
+
+  if (!opts || 'object' !== typeof opts) {
+    throw new TypeError('keyRing: Expecting object')
+  }
+
+  const V = 'number' === typeof opts.version ? opts.version : VERSION
+
+  if (Number.isNaN(V)) {
+    throw new TypeError(`keyRing: Invalid version: ${V}`)
+  } else if (V < 0) {
+    throw new TypeError(`keyRing: Version cannot be signed: ${V}`)
+  } else if (V > 0xff) {
+    throw new TypeError(`keyRing: Version out of range: 0 <= ${V} < ${0xff}`)
+  }
+
+  if (V === VERSION0) {
+    return keyRing0(storage, opts)
+  }
+
+  throw new TypeError(`keyRing: Unsupported version ${V}`)
+}
+
+/**
+ * Generates a Keyring that encrypts and decrypts
+ * version 0 packed network keys.
+ * @public
+ * @see {@link Keyring}
+ * @param {String|Function|Object} storage
+ * @param {Object} opts
+ * @throws TypeError
+ * @return {Keyring}
+ */
+function keyRing0(storage, opts) {
+  if (undefined === storage) {
+    throw new TypeError('keyRing: Storage cannot be undefined.')
+  }
+
+  if (null === storage) {
+    throw new TypeError('keyRing: Storage cannot be undefined.')
+  }
+
+  if (!opts || 'object' !== typeof opts) {
+    throw new TypeError('keyRing: Expecting object')
+  }
+
+  if ('function' !== typeof opts.encrypt) {
+    // eslint-disable-next-line no-param-reassign
+    opts.encrypt = defaultEncrypt
+  }
+
+  if ('function' !== typeof opts.decrypt) {
+    // eslint-disable-next-line no-param-reassign
+    opts.decrypt = defaultDecrypt
+  }
+
+  return new Keyring(storage, opts)
+
+  function defaultEncrypt(buffer, name, keyring) {
+    const { secretKey, secret } = keyring
+    const enc = encrypt({ secretKey, secret, buffer })
+    return Buffer.from(JSON.stringify(enc))
+  }
+
+  function defaultDecrypt(buffer, name, keyring) {
+    const { secretKey, secret } = keyring
+    return decrypt(JSON.parse(buffer), { secretKey, secret })
+  }
+}
+
 module.exports = {
   generate0,
   generate,
 
   keyPair0,
   keyPair,
+
+  keyRing0,
+  keyRing,
 
   encrypt0,
   encrypt,
