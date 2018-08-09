@@ -532,11 +532,6 @@ class Keyring extends EventEmitter {
       // eslint-disable-next-line no-param-reassign
       cb = ensureCallback(cb, resolve, reject)
 
-      if (!name || 'string' !== typeof name) {
-        cb(new TypeError('Keyring: Expecting name to be a string.'))
-        return
-      }
-
       if (false === isBuffer(key)) {
         cb(new TypeError('Keyring: Expecting key to be a buffer.'))
         return
@@ -578,10 +573,6 @@ class Keyring extends EventEmitter {
    * @throws TypeError
    */
   get(name, cb) {
-    if (!name || 'string' !== typeof name) {
-      throw new TypeError('Keyring: Expecting name to be a string.')
-    }
-
     checkCallback(cb)
     return new Promise((resolve, reject) => {
       // eslint-disable-next-line no-param-reassign
@@ -607,10 +598,6 @@ class Keyring extends EventEmitter {
    * @throws TypeError
    */
   access(name, cb) {
-    if (!name || 'string' !== typeof name) {
-      throw new TypeError('Keyring: Expecting name to be a string.')
-    }
-
     checkCallback(cb)
     return new Promise((resolve, reject) => {
       // eslint-disable-next-line no-param-reassign
@@ -636,16 +623,12 @@ class Keyring extends EventEmitter {
   /**
    * Determine if keyring has a named key.
    * @public
-   * @param {String} name
+   * @param {String|Buffer} name
    * @param {?(Function)} cb
    * @return {Promise<Boolean>}
    * @throws TypeError
    */
   has(name, cb) {
-    if (!name || 'string' !== typeof name) {
-      throw new TypeError('Keyring: Expecting name to be a string.')
-    }
-
     checkCallback(cb)
     return new Promise((resolve) => {
       // eslint-disable-next-line no-param-reassign
@@ -719,10 +702,6 @@ class Keyring extends EventEmitter {
    * @throws TypeError
    */
   createReadStream(name) {
-    if (!name || 'string' !== typeof name) {
-      throw new TypeError('Keyring: Expecting name to be a string.')
-    }
-
     if (false === this.readable) {
       throw new TypeError('Keyring: Not readable.')
     }
@@ -807,10 +786,6 @@ class Keyring extends EventEmitter {
    * @throws TypeError
    */
   createWriteStream(name) {
-    if (!name || 'string' !== typeof name) {
-      throw new TypeError('Keyring: Expecting name to be a string.')
-    }
-
     if (false === this.writable) {
       throw new TypeError('Keyring: Not writable')
     }
