@@ -1,6 +1,8 @@
+const { Keyring } = require('../keyring')
 const crypto = require('ara-crypto')
 const keys = require('../keys')
 const test = require('ava')
+const ram = require('random-access-memory')
 
 test('keys.pack() is a function', (t) => {
   t.true('function' === typeof keys.pack)
@@ -316,6 +318,19 @@ test('keys.keyPair0() is a function', (t) => {
   t.true('function' === typeof keys.keyPair0)
 })
 
+test('keys.keyPair() throws TypeError for bad input', (t) => {
+  t.throws(() => keys.keyPair(), TypeError)
+  t.throws(() => keys.keyPair(null), TypeError)
+  t.throws(() => keys.keyPair(true), TypeError)
+  t.throws(() => keys.keyPair(123), TypeError)
+  t.throws(() => keys.keyPair(NaN), TypeError)
+  t.throws(() => keys.keyPair(() => {}), TypeError)
+  t.throws(() => keys.keyPair({ version: -1 }), TypeError)
+  t.throws(() => keys.keyPair({ version: NaN }), TypeError)
+  t.throws(() => keys.keyPair({ version: 0xff }), TypeError)
+  t.throws(() => keys.keyPair({ version: 0xfff }), TypeError)
+})
+
 test('keys.keyPair0() throws TypeError for bad input', (t) => {
   t.throws(() => keys.keyPair0(), TypeError)
   t.throws(() => keys.keyPair0(null), TypeError)
@@ -343,4 +358,51 @@ test('keys.keyPair0() should generate secret keys', (t) => {
   const unpacked = keys.unpack0({ buffer })
   t.true('object' === typeof keyPair.secretKey)
   t.true(Buffer.isBuffer(unpacked.domain.secretKey))
+})
+
+test('keys.keyRing() is a function', (t) => {
+  t.true('function' === typeof keys.keyRing)
+})
+
+test('keys.keyRing0() is a function', (t) => {
+  t.true('function' === typeof keys.keyRing0)
+})
+
+test('keys.keyRing() throws on bad input', (t) => {
+  t.throws(() => keys.keyRing(), TypeError)
+  t.throws(() => keys.keyRing(null), TypeError)
+  t.throws(() => keys.keyRing(ram()), TypeError)
+  t.throws(() => keys.keyRing(ram(), { version: NaN }), TypeError)
+  t.throws(() => keys.keyRing(ram(), { version: -1 }), TypeError)
+  t.throws(() => keys.keyRing(ram(), { version: 0xff }), TypeError)
+  t.throws(() => keys.keyRing(ram(), { version: 0xfff }), TypeError)
+})
+
+test('keys.keyRing0() throws on bad input', (t) => {
+  t.throws(() => keys.keyRing0(), TypeError)
+  t.throws(() => keys.keyRing0(null), TypeError)
+  t.throws(() => keys.keyRing0(ram()), TypeError)
+  t.throws(() => keys.keyRing0(ram(), null), TypeError)
+  t.throws(() => keys.keyRing0(ram(), 1234), TypeError)
+  t.throws(() => keys.keyRing0(ram(), true), TypeError)
+})
+
+test('keys.keyRing() returns a Keyring', async (t) => {
+  const { publicKey, secretKey } = crypto.keyPair()
+  const secret = crypto.randomBytes(64)
+  const netkeys = keys.generate({ publicKey, secretKey, secret })
+  const ring = keys.keyRing(ram(), { secret })
+  t.true(ring instanceof Keyring)
+  await ring.append('netkeys', netkeys)
+  t.true(0 === Buffer.compare(netkeys, await ring.get('netkeys')))
+})
+
+test('keys.keyRing0() returns a Keyring', async (t) => {
+  const { publicKey, secretKey } = crypto.keyPair()
+  const secret = crypto.randomBytes(64)
+  const netkeys = keys.generate0({ publicKey, secretKey, secret })
+  const ring = keys.keyRing0(ram(), { secret })
+  t.true(ring instanceof Keyring)
+  await ring.append('netkeys', netkeys)
+  t.true(0 === Buffer.compare(netkeys, await ring.get('netkeys')))
 })
