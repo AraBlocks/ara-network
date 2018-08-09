@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-const { info, warn, error } = require('ara-console')
 const { resolve, basename } = require('path')
+const { error } = require('ara-console')
 const inquirer = require('inquirer')
 const { DID } = require('did-uri')
 const program = require('yargs')
@@ -49,6 +49,7 @@ const { argv } = program
     type: 'string',
     alias: 'o',
     describe: 'Output file name',
+    required: true,
   })
 
 // eslint-disable-next-line
@@ -105,25 +106,19 @@ void async function main() {
     return onfatal(new Error('Invalid passphrase'))
   }
 
-  if (argv.out) {
-    argv.out = resolve(argv.out)
+  argv.out = resolve(argv.out)
 
-    const buffer = keys.generate({ secret, publicKey, secretKey })
+  const buffer = keys.generate({ secret, publicKey, secretKey })
 
-    const secretKeyring = keys.keyRing(argv.out, { secret: secretKey })
-    const publicKeyring = keys.keyRing(`${argv.out}.pub`, { secret })
+  const secretKeyring = keys.keyRing(argv.out, { secret: secretKey })
+  const publicKeyring = keys.keyRing(`${argv.out}.pub`, { secret })
 
-    if (false === await secretKeyring.has(argv.name)) {
-      await secretKeyring.append(argv.name, buffer.slice(keys.PK_SIZE))
-    }
+  if (false === await secretKeyring.has(argv.name)) {
+    await secretKeyring.append(argv.name, buffer.slice(keys.PK_SIZE))
+  }
 
-    if (false === await publicKeyring.has(argv.name)) {
-      await publicKeyring.append(argv.name, buffer.slice(0, keys.PK_SIZE))
-    }
-  } else {
-    const keyPair = keys.keyPair({ secret, publicKey, secretKey })
-    // eslint-disable-next-line no-console
-    console.log(JSON.stringify(keyPair, null, '  '))
+  if (false === await publicKeyring.has(argv.name)) {
+    await publicKeyring.append(argv.name, buffer.slice(0, keys.PK_SIZE))
   }
 }()
 
