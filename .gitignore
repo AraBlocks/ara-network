@@ -61,3 +61,5 @@ typings/
 .next
 .netrc
 package-lock.json
+example/keys
+example/keys.pub
