@@ -4,6 +4,7 @@ const crypto = require('ara-crypto')
 const rimraf = require('rimraf')
 const pify = require('pify')
 const test = require('ava')
+const keys = require('../keys')
 const ram = require('random-access-memory')
 
 const {
@@ -168,24 +169,56 @@ test('Keyring(storage, opts) throws on bad input', (t) => {
 test('Keyring(storage, opts) instance', (t) => {
   const secret = crypto.randomBytes(64)
   const storage = ram()
-  const keyring = new Keyring(storage, { secret })
+  const keyring0 = new Keyring(storage, { secret })
+  const keyring1 = new Keyring(storage, {
+    encrypt() {},
+    decrypt() {},
+    unpack() {},
+    pack() {},
+    secret,
+  })
 
   // key pairs
-  t.true(isBuffer(keyring.publicKey))
-  t.true(isBuffer(keyring.secretKey))
-  t.true(32 === keyring.publicKey.length)
-  t.true(64 === keyring.secretKey.length)
+  t.true(isBuffer(keyring0.publicKey))
+  t.true(isBuffer(keyring0.secretKey))
+  t.true(32 === keyring0.publicKey.length)
+  t.true(64 === keyring0.secretKey.length)
 
-  t.true(storage === keyring.storage)
-  t.true(false === keyring.isReady)
-  t.true('function' === typeof keyring.lock)
+  t.true(storage === keyring0.storage)
+  t.true(false === keyring0.isReady)
+  t.true('function' === typeof keyring0.lock)
 
   // accessors
-  t.true(isBuffer(keyring.secret))
-  t.true(64 === keyring.secret.length)
-  t.true(keyring.readable)
-  t.true(keyring.writable)
-  t.true(keyring.statable)
+  t.true(isBuffer(keyring0.secret))
+  t.true(64 === keyring0.secret.length)
+  t.true(keyring0.readable)
+  t.true(keyring0.writable)
+  t.true(keyring0.statable)
+  t.false(keyring0.packable)
+  t.false(keyring0.unpackable)
+  t.false(keyring0.encryptable)
+  t.false(keyring0.decryptable)
+
+  // key pairs
+  t.true(isBuffer(keyring1.publicKey))
+  t.true(isBuffer(keyring1.secretKey))
+  t.true(32 === keyring1.publicKey.length)
+  t.true(64 === keyring1.secretKey.length)
+
+  t.true(storage === keyring1.storage)
+  t.true(false === keyring1.isReady)
+  t.true('function' === typeof keyring1.lock)
+
+  // accessors
+  t.true(isBuffer(keyring1.secret))
+  t.true(64 === keyring1.secret.length)
+  t.true(keyring1.readable)
+  t.true(keyring1.writable)
+  t.true(keyring1.statable)
+  t.true(keyring1.packable)
+  t.true(keyring1.unpackable)
+  t.true(keyring1.encryptable)
+  t.true(keyring1.decryptable)
 })
 
 test('Keyring#hash(name) computes a short hash for a keyring', (t) => {
@@ -533,6 +566,7 @@ test('Keyring(storage, opts) emits ready for existing instance', async (t) => {
 })
 
 test('Keyring(...) simple test', async (t) => {
+  // eslint-disable-next-line no-shadow
   const keys = {
     alpha: crypto.ed25519.keyPair(Buffer.alloc(32).fill('alpha')),
     beta: crypto.ed25519.keyPair(Buffer.alloc(32).fill('beta')),
@@ -573,4 +607,57 @@ test('Keyring(...) simple test', async (t) => {
   ))
 
   await pify(rimraf)(path)
+})
+
+test('Keyring(...) with network keys', async (t) => {
+  const secret = crypto.randomBytes(64)
+  const { publicKey, secretKey } = crypto.keyPair()
+  const networkKeys = keys.generate({ publicKey, secretKey, secret })
+  const storage = ram()
+  const keyring = new Keyring(storage, {
+    secret, decrypt, encrypt
+  })
+
+  await keyring.append('testnet', networkKeys)
+
+  t.true(0 === Buffer.compare(
+    networkKeys,
+    await keyring.get('testnet')
+  ))
+
+  const buffer = await keyring.get('testnet')
+  const unpacked = keys.unpack({ buffer })
+  const expected = keys.unpack({ buffer: networkKeys })
+
+  t.true(0 === Buffer.compare(
+    unpacked.discoveryKey,
+    expected.discoveryKey
+  ))
+
+  t.true(0 === Buffer.compare(
+    unpacked.publicKey,
+    expected.publicKey
+  ))
+
+  t.true(0 === Buffer.compare(
+    unpacked.domain.publicKey,
+    expected.domain.publicKey
+  ))
+
+  t.true(0 === Buffer.compare(
+    unpacked.domain.secretKey,
+    expected.domain.secretKey
+  ))
+
+  function decrypt(buf, name, k) {
+    return keys.decrypt(JSON.parse(buf), k)
+  }
+
+  function encrypt(buf, name, k) {
+    return Buffer.from(JSON.stringify(keys.encrypt({
+      secretKey: k.secretKey,
+      secret: k.secret,
+      buffer: buf,
+    })))
+  }
 })
