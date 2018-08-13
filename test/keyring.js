@@ -250,6 +250,27 @@ test('Keyring#ready(cb) throws on bad input', (t) => {
   t.throws(() => keyring.ready(1234), TypeError)
 })
 
+test.cb('Keyring#ready(cb) throws on bad state', (t) => {
+  const secret = Buffer.alloc(64).fill(1)
+  const keyring = new Keyring(ram, { secret })
+
+  keyring.storage.close()
+  keyring.ready(onready)
+
+  function onready(err) {
+    t.true(err instanceof Error)
+    t.end()
+  }
+})
+
+test('Keyring#ready() rejects on bad state', async (t) => {
+  const secret = Buffer.alloc(64).fill(1)
+  const keyring = new Keyring(ram, { secret })
+
+  keyring.storage.close()
+  await t.throws(keyring.ready())
+})
+
 test('Keyring#ready() returns a promise', async (t) => {
   const secret = Buffer.alloc(64).fill(1)
   const keyring = new Keyring(ram, { secret })
