@@ -437,21 +437,29 @@ class Keyring extends EventEmitter {
    * @return {Promise}
    */
   ready(cb) {
+    const keyring = this
     const { isReady } = this
 
     checkCallback(cb)
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       // eslint-disable-next-line no-param-reassign
-      cb = ensureCallback(cb, resolve)
+      cb = ensureCallback(cb, resolve, reject)
 
       if (isReady) {
         process.nextTick(onready)
       } else {
-        this.once('ready', onready)
+        keyring.once('error', onerror)
+        keyring.once('ready', onready)
       }
 
       function onready() {
+        keyring.removeListener('error', onerror)
         cb(null)
+      }
+
+      function onerror(err) {
+        keyring.removeListener('ready', onready)
+        cb(err)
       }
     })
   }
