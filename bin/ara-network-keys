@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const { resolve, basename } = require('path')
-const { error } = require('ara-console')
+const { warn, error } = require('ara-console')
 const inquirer = require('inquirer')
 const { DID } = require('did-uri')
 const program = require('yargs')
@@ -113,12 +113,16 @@ void async function main() {
   const secretKeyring = keys.keyRing(argv.out, { secret: secretKey })
   const publicKeyring = keys.keyRing(`${argv.out}.pub`, { secret })
 
-  if (false === await secretKeyring.has(argv.name)) {
-    await secretKeyring.append(argv.name, buffer.slice(keys.PK_SIZE))
-  }
-
   if (false === await publicKeyring.has(argv.name)) {
     await publicKeyring.append(argv.name, buffer.slice(0, keys.PK_SIZE))
+  } else {
+    warn('\'%s\' already exists in public key ring', argv.name)
+  }
+
+  if (false === await secretKeyring.has(argv.name)) {
+    await secretKeyring.append(argv.name, buffer.slice(keys.PK_SIZE))
+  } else {
+    warn('\'%s\' already exists in secret key ring', argv.name)
   }
 }()
 
