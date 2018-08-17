@@ -8,6 +8,10 @@ const defaults = () => ({
       root: resolve(rc().data.root, 'secrets')
     },
 
+    identity: {
+      root: resolve(rc().data.root, 'identities')
+    },
+
     keyrings: {
       root: resolve(rc().data.root, 'keyrings')
     }
