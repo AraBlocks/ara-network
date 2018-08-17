@@ -11,9 +11,7 @@ const crypto = require('ara-crypto')
 const pump = require('pump')
 const pify = require('pify')
 const net = require('net')
-const rc = require('../../rc')(require('ara-identity/rc')())
-
-require('ara-identity/rc')()
+const rc = require('../../rc')()
 
 const conf = {}
 let channel = null
