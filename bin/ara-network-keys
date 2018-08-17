@@ -9,7 +9,7 @@ const crypto = require('ara-crypto')
 const debug = require('debug')('ara:network:keys')
 const keys = require('../keys')
 const pify = require('pify')
-const rc = require('../rc')(require('ara-identity/rc')())
+const rc = require('../rc')()
 const fs = require('fs')
 
 const $0 = basename(process.argv[1] || 'ara-network-keys')
