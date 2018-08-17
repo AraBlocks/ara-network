@@ -35,7 +35,6 @@
   "dependencies": {
     "ara-console": "github:arablocks/ara-console",
     "ara-crypto": "github:arablocks/ara-crypto",
-    "ara-identity": "github:arablocks/ara-identity",
     "ara-runtime-configuration": "github:arablocks/ara-runtime-configuration",
     "async-exit-hook": "^2.0.1",
     "bittorrent-dht": "^8.3.0",
