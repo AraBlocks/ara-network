@@ -2,6 +2,7 @@
 const { unpack, keyRing } = require('../../keys')
 const { createChannel } = require('../../discovery/channel')
 const { Handshake } = require('../../handshake')
+const ss = require('ara-secret-storage')
 const { readFile } = require('fs')
 const { resolve } = require('path')
 const { info } = require('ara-console')
@@ -69,7 +70,7 @@ async function start() {
   const path = resolve(rc.network.identity.root, hash, 'keystore/ara')
   const secret = Buffer.from(conf.secret)
   const keystore = JSON.parse(await pify(readFile)(path, 'utf8'))
-  const secretKey = crypto.decrypt(keystore, { key: password.slice(0, 16) })
+  const secretKey = ss.decrypt(keystore, { key: password.slice(0, 16) })
 
   const keyring = keyRing(conf.keys, { secret })
   const buffer = await keyring.get(conf.name)

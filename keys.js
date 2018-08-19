@@ -1,3 +1,4 @@
+const ss = require('ara-secret-storage')
 const { Keyring } = require('./keyring')
 const isBuffer = require('is-buffer')
 const crypto = require('ara-crypto')
@@ -376,7 +377,7 @@ function encrypt0(opts) {
     throw unknownTypeError('encrypt', T)
   }
 
-  const result = crypto.encrypt(Z, { key, iv })
+  const result = ss.encrypt(Z, { key, iv })
 
   result.type = T
 
@@ -460,7 +461,7 @@ function decrypt0(storage, opts) {
     throw unknownTypeError('decrypt', T)
   }
 
-  const result = crypto.decrypt(storage, { key })
+  const result = ss.decrypt(storage, { key })
 
   return result
 }

@@ -1,6 +1,7 @@
 const isBuffer = require('is-buffer')
 const crypto = require('ara-crypto')
 const debug = require('debug')('ara:network:secret-handshake')
+const ss = require('ara-secret-storage')
 
 class Handshake {
   constructor(opts) {
@@ -65,7 +66,7 @@ class Handshake {
     const iv = this.iv()
     const key = this.key()
     const digest = this.digest()
-    const challenge = crypto.encrypt(digest, { key, iv })
+    const challenge = ss.encrypt(digest, { key, iv })
     return Buffer.from(JSON.stringify(challenge), 'utf8')
   }
 
@@ -87,7 +88,7 @@ class Handshake {
     try {
       const key = this.key()
       const digest = this.digest()
-      const proof = crypto.decrypt(challenge, { key })
+      const proof = ss.decrypt(challenge, { key })
       if (0 == Buffer.compare(digest, proof)) {
         return true
       }
