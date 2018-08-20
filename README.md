@@ -36,7 +36,7 @@ $ ann -t <relative path> (launch node by relative path)
 $ ann -t dht
 ```
 
-### `ara-network-secrets(1)`
+### `ara-network-secrets(1)` (DEPRECATED)
 Manage ARA keystores.
 
 #### Usage
@@ -45,27 +45,6 @@ $ ans -h (help)
 $ ans -k <name> (create key)
 $ ans --import -k <name> <path> (import key)
 $ ans --export -k <name> [--public] [-o <output path>] (export key)
-```
-
-#### Examples
-*Import the key stored in `./resolver.pub` as `localresolver`*
-```bash
-$ ans --import -k localresolver ./resolver.pub
-```
-
-*Export the public key of `localresolver` to `~/ssh/resolver.pub`*
-```bash
-$ ans --export -k localresolver --public -o ~/.ssh/resolver.pub
-```
-
-*Create a new key named `localresolver`*
-```bash
-$ ans -k localresolver
-```
-
-*Removes a key named `localresolver`*
-```bash
-ans -r localresolver
 ```
 
 ### `ara-network-keys(1)`
