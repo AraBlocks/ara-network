@@ -63,7 +63,7 @@ $ ank -i <DID>
 ```
 
 #### Examples
-* Create new shared network key for DID `86533105b0906a782b67f1aa8266a69c606fd6df948d22178390df4a395f267a` using `ara-archiver` as `secret` & `remote1` as the `name-in-keyring`
+* Create new shared network key for DID `86533105b0906a782b67f1aa8266a69c606fd6df948d22178390df4a395f267a` using `ara-archiver` as `secret` & `remote1` as the `keyring-name-entry`
 
 ```bash
 $ ank -i 86533105b0906a782b67f1aa8266a69c606fd6df948d22178390df4a395f267a
