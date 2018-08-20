@@ -9,7 +9,7 @@ Tools for launching nodes that interact with the _ARA Network_.
 This project is still in alpha development.
 
 ## Dependencies
-- [Node](https://nodejs.org/en/download/) 
+- [Node](https://nodejs.org/en/download/)
 
 ## Installation
 ```bash
@@ -67,6 +67,29 @@ $ ans -k localresolver
 ```bash
 ans -r localresolver
 ```
+
+### `ara-network-keys(1)`
+Manage ARA keystores.
+
+#### Prerequisite
+Create an ARA ID for the server node using the AID CLI or the `create()` method
+
+#### Usage
+```bash
+$ ank -h (help)
+$ ank -i <DID> -s <shared-secret-string> -n <keyring-name-entry> -o <output keyring file> (create new shared network key)
+```
+
+#### Examples
+* Create new shared network key for DID `86533105b0906a782b67f1aa8266a69c606fd6df948d22178390df4a395f267a` using `ara-archiver` as `secret` & `remote1` as the `name-in-keyring`
+
+```bash
+$ ank -i 86533105b0906a782b67f1aa8266a69c606fd6df948d22178390df4a395f267a -s ara-archiver -n remote1 -o ~/.ara/secrets/ara-archiver
+```
+
+* The above command would create a set of shared network key files (i.e) a secret key and a public key
+* If the mentioned keyRing file already exists, the `keyring-name-entry` would be just appended to the keyring array. Else, it will create a new set of files
+* Delegation - Use the secret key, shared-secret-string & the keyring-name-entry to start up the remote node and then share the public key along with the shared-secret-string to all the peers who would want to communicate with the server
 
 ## Contributing
 - [Commit message format](/.github/COMMIT_FORMAT.md)
