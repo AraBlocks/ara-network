@@ -63,3 +63,4 @@ typings/
 package-lock.json
 example/keys
 example/keys.pub
+.DS_Store
