@@ -54,21 +54,21 @@ Create & Manage ARA Network Keys used in Handshake V2
 Create an ARA ID for the server node using the AID CLI or the `create()` method
 
 #### Usage
-```bash
+```sh
 $ ank -h (help)
-$ ank -i <DID>
-      -s <shared-secret-string>
-      -n <keyring-name-entry>
+$ ank -i <DID> \
+      -s <shared-secret-string> \
+      -n <keyring-name-entry> \
       -o <output-keyring-file> (create new shared network key)
 ```
 
 #### Examples
 * Create new shared network key for DID `86533105b0906a782b67f1aa8266a69c606fd6df948d22178390df4a395f267a` using `ara-archiver` as `secret` & `remote1` as the `keyring-name-entry`
 
-```bash
-$ ank -i 86533105b0906a782b67f1aa8266a69c606fd6df948d22178390df4a395f267a
-      -s ara-archiver
-      -n remote1
+```sh
+$ ank -i 86533105b0906a782b67f1aa8266a69c606fd6df948d22178390df4a395f267a \
+      -s ara-archiver \
+      -n remote1 \
       -o ~/.ara/secrets/ara-archiver
 ```
 
