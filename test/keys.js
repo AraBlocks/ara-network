@@ -1,4 +1,5 @@
 const { Keyring } = require('../keyring')
+const ss = require('ara-secret-storage')
 const crypto = require('ara-crypto')
 const keys = require('../keys')
 const test = require('ava')
@@ -241,7 +242,7 @@ test('keys.encrypt0() encrypts public network keys', (t) => {
   t.true('object' === typeof encrypted)
 
   const key = crypto.blake2b(crypto.blake2b(secret, 32), 16)
-  const decrypted = crypto.decrypt(encrypted, { key })
+  const decrypted = ss.decrypt(encrypted, { key })
 
   t.true(0 === Buffer.compare(decrypted, buffer))
 })
@@ -262,7 +263,7 @@ test('keys.encrypt0() encrypts secret network keys', (t) => {
     crypto.blake2b(secret, 32), secretKey
   ]), 16)
 
-  const decrypted = crypto.decrypt(encrypted, { key })
+  const decrypted = ss.decrypt(encrypted, { key })
 
   t.true(0 === Buffer.compare(decrypted, buffer))
 })

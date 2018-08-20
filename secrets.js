@@ -1,6 +1,7 @@
 const { resolve } = require('path')
 const crypto = require('ara-crypto')
 const debug = require('debug')('ara:network:secrets')
+const ss = require('ara-secret-storage')
 const pify = require('pify')
 const rc = require('./rc')()
 const fs = require('fs')
@@ -98,9 +99,9 @@ function encrypt(opts) {
     const buffer = Buffer.allocUnsafe(32)
     prefix = Buffer.from(prefix)
     if (opts.seed) {
-      buffer.fill(Buffer.concat([prefix, opts.seed]))
+      buffer.fill(Buffer.concat([ prefix, opts.seed ]))
     } else {
-      buffer.fill(Buffer.concat([prefix, crypto.randomBytes(32 - prefix.length)]))
+      buffer.fill(Buffer.concat([ prefix, crypto.randomBytes(32 - prefix.length) ]))
     }
     return buffer
   }
@@ -160,10 +161,10 @@ function pack(keys, opts) {
 
   result.public.discoveryKey = keys.discoveryKey.toString('hex')
   result.public.digest = digest.toString('hex')
-  result.public.keystore = crypto.encrypt(buffers.public, { key, iv })
+  result.public.keystore = ss.encrypt(buffers.public, { key, iv })
 
   result.secret.discoveryKey = keys.discoveryKey.toString('hex')
-  result.secret.keystore = crypto.encrypt(buffers.secret, { key, iv })
+  result.secret.keystore = ss.encrypt(buffers.secret, { key, iv })
   result.secret.digest = digest.toString('hex')
 
   free()
@@ -246,7 +247,7 @@ function decrypt(doc, opts) {
   }
 
   const key = crypto.blake2b(opts.key, 16)
-  const buffer = crypto.decrypt(doc.keystore, Object.assign({}, opts, { key }))
+  const buffer = ss.decrypt(doc.keystore, Object.assign({}, opts, { key }))
   // for header
   const offset = 3
   const header = read(0, offset)
