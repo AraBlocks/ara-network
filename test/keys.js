@@ -1,9 +1,10 @@
 const { Keyring } = require('../keyring')
-const ss = require('ara-secret-storage')
+const isBuffer = require('is-buffer')
 const crypto = require('ara-crypto')
 const keys = require('../keys')
 const test = require('ava')
 const ram = require('random-access-memory')
+const ss = require('ara-secret-storage')
 
 test('keys.pack() is a function', (t) => {
   t.true('function' === typeof keys.pack)
@@ -358,7 +359,7 @@ test('keys.keyPair0() should generate secret keys', (t) => {
   const buffer = keys.decrypt0(keyPair.secretKey, { secretKey, secret })
   const unpacked = keys.unpack0({ buffer })
   t.true('object' === typeof keyPair.secretKey)
-  t.true(Buffer.isBuffer(unpacked.domain.secretKey))
+  t.true(isBuffer(unpacked.domain.secretKey))
 })
 
 test('keys.keyRing() is a function', (t) => {
@@ -406,4 +407,100 @@ test('keys.keyRing0() returns a Keyring', async (t) => {
   t.true(ring instanceof Keyring)
   await ring.append('netkeys', netkeys)
   t.true(0 === Buffer.compare(netkeys, await ring.get('netkeys')))
+})
+
+test.cb('keys.derive() is a function', (t) => {
+  t.true('function' === typeof keys.derive)
+  t.end()
+})
+
+test.cb('keys.derive0() is a function', (t) => {
+  t.true('function' === typeof keys.derive0)
+  t.end()
+})
+
+test.cb('keys.derive() throws on bad input', (t) => {
+  t.throws(() => keys.derive(), TypeError)
+  t.throws(() => keys.derive({}), TypeError)
+  t.throws(() => keys.derive({ version: '' }), TypeError)
+  t.throws(() => keys.derive({ version: null }), TypeError)
+  t.throws(() => keys.derive({ version: true }), TypeError)
+  t.throws(() => keys.derive({ version: 1234 }), TypeError)
+  t.throws(() => keys.derive({ version: () => {} }), TypeError)
+  t.throws(() => keys.derive({ version: -1 }), TypeError)
+  t.throws(() => keys.derive({ version: 23 }), TypeError)
+  t.throws(() => keys.derive({ version: NaN }), TypeError)
+  t.throws(() => keys.derive({ version: 0xfff }), TypeError)
+  t.end()
+})
+
+test.cb('keys.derive0() throws on bad input', (t) => {
+  t.throws(() => keys.derive0(), TypeError)
+  t.throws(() => keys.derive0(''), TypeError)
+  t.throws(() => keys.derive0(null), TypeError)
+  t.throws(() => keys.derive0(true), TypeError)
+  t.throws(() => keys.derive0(1234), TypeError)
+  t.throws(() => keys.derive0(() => {}), TypeError)
+  t.throws(() => keys.derive0({}), TypeError)
+
+  t.throws(() => keys.derive0({ secretKey: '' }), TypeError)
+  t.throws(() => keys.derive0({ secretKey: null }), TypeError)
+  t.throws(() => keys.derive0({ secretKey: true }), TypeError)
+  t.throws(() => keys.derive0({ secretKey: 1234 }), TypeError)
+  t.throws(() => keys.derive0({ secretKey: () => {} }), TypeError)
+  t.throws(() => keys.derive0({ secretKey: Buffer.alloc(0) }), RangeError)
+  t.throws(() => keys.derive0({ secretKey: Buffer.alloc(16) }), RangeError)
+
+  t.throws(() => keys.derive0({
+    secretKey: Buffer.alloc(32),
+  }), TypeError)
+
+  t.throws(() => keys.derive0({
+    secretKey: Buffer.alloc(32),
+    name: null
+  }), TypeError)
+
+  t.throws(() => keys.derive0({
+    secretKey: Buffer.alloc(32),
+    name: true
+  }), TypeError)
+
+  t.throws(() => keys.derive0({
+    secretKey: Buffer.alloc(32),
+    name: 1234
+  }), TypeError)
+
+  t.throws(() => keys.derive0({
+    secretKey: Buffer.alloc(32),
+    name: () => {}
+  }), TypeError)
+
+  t.throws(() => keys.derive0({
+    secretKey: Buffer.alloc(32),
+    name: ''
+  }), RangeError)
+
+  t.throws(() => keys.derive0({
+    secretKey: Buffer.alloc(32),
+    name: Buffer.alloc(0)
+  }), RangeError)
+
+  t.end()
+})
+
+test.cb('keys.derive0() returns a key pair', (t) => {
+  const { secretKey } = crypto.ed25519.keyPair()
+  const a = keys.derive0({ secretKey, name: 'a' })
+  const b = keys.derive0({ secretKey, name: 'b' })
+
+  t.true(isBuffer(a.publicKey))
+  t.true(isBuffer(a.secretKey))
+
+  t.true(isBuffer(b.publicKey))
+  t.true(isBuffer(b.secretKey))
+
+  t.true(0 !== Buffer.compare(a.publicKey, b.publicKey))
+  t.true(0 !== Buffer.compare(a.secretKey, b.secretKey))
+
+  t.end()
 })
