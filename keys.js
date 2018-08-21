@@ -1,7 +1,8 @@
-const ss = require('ara-secret-storage')
 const { Keyring } = require('./keyring')
 const isBuffer = require('is-buffer')
+const sodium = require('ara-crypto/sodium')
 const crypto = require('ara-crypto')
+const ss = require('ara-secret-storage')
 
 /**
  * Supported packed binary formats in this module
@@ -40,6 +41,12 @@ const PK_SIZE0 = HEADER_SIZE0 + 32
 const SK_SIZE0 = HEADER_SIZE0 + 32
 const PK_SIZE = PK_SIZE0
 const SK_SIZE = SK_SIZE0
+
+/**
+ * 8 byte kdf context buffer
+ */
+const KDF_CONTEXT0 = Buffer.from('_aranet0')
+const KDF_CONTEXT = KDF_CONTEXT0
 
 /**
  * Creates and returns a new 'TypeError'
@@ -296,7 +303,7 @@ function unpack0(opts) {
   return unpacked
 
   function read(size) {
-    /* eslint-disable no-return-assign */
+    // eslint-disable-next-line no-return-assign
     return Z.slice(read.i, read.i += size)
   }
 }
@@ -469,6 +476,7 @@ function decrypt0(storage, opts) {
 /**
  * Generates and packs public and secret networks keys for some
  * key pair (B)
+ *
  * @public
  * @param {Object} opts
  * @param {Buffer} opts.publicKey
@@ -501,6 +509,7 @@ function generate(opts) {
 /**
  * Generates and packs public and secret networks keys for some
  * key pair (B)
+ *
  * @public
  * @param {Object} opts
  * @param {Buffer} opts.secret
@@ -619,6 +628,7 @@ function keyPair0(opts) {
 /**
  * Generates a Keyring that encrypts and decrypts
  * packed network keys.
+ *
  * @public
  * @see {@link Keyring}
  * @param {String|Function|Object} storage
@@ -659,6 +669,7 @@ function keyRing(storage, opts) {
 /**
  * Generates a Keyring that encrypts and decrypts
  * version 0 packed network keys.
+ *
  * @public
  * @see {@link Keyring}
  * @param {String|Function|Object} storage
@@ -711,6 +722,83 @@ function keyRing0(storage, opts) {
   }
 }
 
+/**
+ * Derives a named child key pair from a secret key
+ *
+ * @public
+ * @param {Object} opts
+ * @param {Object} opts.name
+ * @param {Object} opts.secretKey
+ * @return {Object}
+ * @throws TypeError
+ */
+function derive(opts) {
+  if (!opts || 'object' !== typeof opts) {
+    throw new TypeError('Expecting object')
+  }
+
+  const V = 'number' === typeof opts.version ? opts.version : VERSION
+
+  if (Number.isNaN(V)) {
+    throw new TypeError(`Invalid version: ${V}`)
+  } else if (V < 0) {
+    throw new TypeError(`Version cannot be signed: ${V}`)
+  } else if (V > 0xff) {
+    throw new TypeError(`Version out of range: 0 <= ${V} < ${0xff}`)
+  }
+
+  if (V === VERSION0) {
+    return derive0(opts)
+  }
+
+  throw new TypeError(`Unsupported version ${V}`)
+}
+
+/**
+ * Derives a named child key pair from a secret key
+ *
+ * @public
+ * @param {Object} opts
+ * @param {Object} opts.name
+ * @param {Object} opts.secretKey
+ * @return {Object}
+ * @throws TypeError
+ * @throws RangeError
+ */
+function derive0(opts) {
+  if (!opts || 'object' !== typeof opts) {
+    throw new TypeError('Expecting object')
+  }
+
+  if (false === isBuffer(opts.secretKey)) {
+    throw new TypeError('Expecting secret key to be a buffer')
+  }
+
+  if (opts.secretKey.length < 32) {
+    throw new RangeError('Expecting secret key to be at least 32 bytes')
+  }
+
+  if ('string' !== typeof opts.name && false === isBuffer(opts.name)) {
+    throw new TypeError('Expecting name to be a string or buffer')
+  }
+
+  if (0 === opts.name.length) {
+    throw new RangeError('Name cannot be empty')
+  }
+
+  const rel = Buffer.concat([ KDF_CONTEXT0, Buffer.from(opts.name) ])
+  const ctx = crypto.shash(rel, opts.secretKey.slice(16, 32))
+  const seed = Buffer.allocUnsafe(sodium.crypto_sign_SEEDBYTES)
+
+  // this should probably be implemented in ara-crypto
+  sodium.crypto_kdf_derive_from_key(seed, 1, ctx, opts.secretKey)
+  const { publicKey, secretKey } = crypto.ed25519.keyPair(seed)
+
+  seed.fill(0)
+
+  return { publicKey, secretKey }
+}
+
 module.exports = {
   generate0,
   generate,
@@ -733,10 +821,16 @@ module.exports = {
   pack0,
   pack,
 
+  derive0,
+  derive,
+
   VERSION0,
   VERSION,
   PKX,
   SKX,
+
+  KDF_CONTEXT0,
+  KDF_CONTEXT,
 
   HEADER_SIZE0,
   HEADER_SIZE,
