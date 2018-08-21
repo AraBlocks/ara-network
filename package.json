@@ -5,10 +5,8 @@
   "main": "index.js",
   "bin": {
     "ara-network-node": "bin/ara-network-node",
-    "ara-network-secrets": "bin/ara-network-secrets",
     "ara-network-keys": "bin/ara-network-keys",
     "ann": "bin/ara-network-node",
-    "ans": "bin/ara-network-secrets",
     "ank": "bin/ara-network-keys"
   },
   "scripts": {
