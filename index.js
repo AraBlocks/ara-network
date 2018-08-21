@@ -1,17 +1,20 @@
-const { Handshake } = require('./secret-handshake')
-const discovery = require('./discovery')
+const { Handshake } = require('./handshake')
+const { Keyring } = require('./keyring')
 const signalhub = require('./signalhub')
-const handshake = require('./handshake')
-const secrets = require('./secrets')
+const discovery = require('./discovery')
+const keys = require('./keys')
 const dht = require('./dht')
 const dns = require('./dns')
+const rc = require('./rc')
 
 module.exports = {
   Handshake,
+  Keyring,
+
   discovery,
   signalhub,
-  handshake,
-  secrets,
+  keys,
   dht,
   dns,
+  rc,
 }
