@@ -44,7 +44,6 @@ const { argv } = program
     type: 'string',
     alias: 'name',
     describe: 'Human readable name for network keys',
-    required: true
   })
   .option('o', {
     type: 'string',
@@ -52,10 +51,10 @@ const { argv } = program
     describe: 'Output file name',
     required: true,
   })
-  .option('d', {
+  .option('p', {
     type: 'boolean',
-    alias: 'derive',
-    describe: 'Derive key pair for network keys'
+    alias: 'personal',
+    describe: 'Personal keys'
   })
 
 // eslint-disable-next-line
@@ -69,6 +68,10 @@ void async function main() {
 
   if (!argv.secret) {
     return onfatal(new Error('Missing shared secret'))
+  }
+
+  if (!argv.personal && !argv.name) {
+    return onfatal(new Error('Name required for non-personal keyrings'))
   }
 
   let publicKey = null
@@ -118,7 +121,10 @@ void async function main() {
   argv.out = resolve(argv.out)
 
   try {
-    if (argv.derive) {
+    if (argv.personal) {
+      buffer = keys.generate({ secret, publicKey, secretKey })
+    } else {
+      buffer = keys.generate({ secret, publicKey, secretKey })
       const keyPair = keys.derive({
         secretKey, name: argv.name
       })
@@ -128,8 +134,6 @@ void async function main() {
         publicKey: keyPair.publicKey,
         secretKey: keyPair.secretKey
       })
-    } else {
-      buffer = keys.generate({ secret, publicKey, secretKey })
     }
   } catch (err) {
     onfatal(err)
@@ -139,16 +143,26 @@ void async function main() {
     const secretKeyring = keys.keyRing(argv.out, { secret: secretKey })
     const publicKeyring = keys.keyRing(`${argv.out}.pub`, { secret })
 
-    if (false === await publicKeyring.has(argv.name)) {
-      await publicKeyring.append(argv.name, buffer.slice(0, keys.PK_SIZE))
-    } else {
-      warn('\'%s\' already exists in public key ring', argv.name)
-    }
+    if (argv.personal) {
+      if (false === await publicKeyring.has(publicKey)) {
+        await publicKeyring.append(publicKey, buffer.slice(0, keys.PK_SIZE))
+      }
 
-    if (false === await secretKeyring.has(argv.name)) {
-      await secretKeyring.append(argv.name, buffer.slice(keys.PK_SIZE))
+      if (false === await secretKeyring.has(secretKey)) {
+        await secretKeyring.append(secretKey, buffer.slice(0, keys.PK_SIZE))
+      }
     } else {
-      warn('\'%s\' already exists in secret key ring', argv.name)
+      if (false === await publicKeyring.has(argv.name)) {
+        await publicKeyring.append(argv.name, buffer.slice(0, keys.PK_SIZE))
+      } else {
+        warn('\'%s\' already exists in public key ring', argv.name)
+      }
+
+      if (false === await secretKeyring.has(argv.name)) {
+        await secretKeyring.append(argv.name, buffer.slice(keys.PK_SIZE))
+      } else {
+        warn('\'%s\' already exists in secret key ring', argv.name)
+      }
     }
   } catch (err) {
     onfatal(err)
