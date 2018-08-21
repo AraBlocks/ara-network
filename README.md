@@ -36,17 +36,6 @@ $ ann -t <relative path> (launch node by relative path)
 $ ann -t dht
 ```
 
-### `ara-network-secrets(1)` (DEPRECATED)
-Manage ARA keystores.
-
-#### Usage
-```bash
-$ ans -h (help)
-$ ans -k <name> (create key)
-$ ans --import -k <name> <path> (import key)
-$ ans --export -k <name> [--public] [-o <output path>] (export key)
-```
-
 ### `ara-network-keys(1)`
 Create & Manage ARA Network Keys used in Handshake V2
 
@@ -69,7 +58,7 @@ $ ank -i <DID> \
 $ ank -i 86533105b0906a782b67f1aa8266a69c606fd6df948d22178390df4a395f267a \
       -s ara-archiver \
       -n remote1 \
-      -o ~/.ara/secrets/ara-archiver
+      -o ~/.ara/keyrings/ara-archiver
 ```
 
 * The above command would create a set of shared network key files (i.e) a secret key and a public key
