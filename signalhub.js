@@ -4,7 +4,6 @@ const Server = require('signalhub/server')
  * Create Signalhub Server (https://github.com/mafintosh/signalhub)
  *
  * @param  {Object} opts
- *
  * @return {Signalhub}
  */
 

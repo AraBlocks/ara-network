@@ -1,6 +1,5 @@
 const discovery = require('dns-discovery')
 const extend = require('extend')
-// const debug = require('debug')('ara:network:dns')
 
 const defaults = {
   multicast: true,
