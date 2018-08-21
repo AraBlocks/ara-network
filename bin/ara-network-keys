@@ -7,10 +7,10 @@ const { DID } = require('did-uri')
 const program = require('yargs')
 const crypto = require('ara-crypto')
 const debug = require('debug')('ara:network:keys')
-const ss = require('ara-secret-storage')
 const keys = require('../keys')
 const pify = require('pify')
 const rc = require('../rc')()
+const ss = require('ara-secret-storage')
 const fs = require('fs')
 
 const $0 = basename(process.argv[1] || 'ara-network-keys')
@@ -23,34 +23,39 @@ const { argv } = program
   .alias('help', 'h')
   .alias('version', 'V')
   .usage('usage: $0 [-hDV] [options] [did]')
-  .option('debug', {
+  .option('D', {
     type: 'boolean',
-    alias: 'D',
+    alias: 'debug',
     describe: 'Enable debug output'
   })
-  .option('identity', {
+  .option('i', {
     type: 'string',
-    alias: 'i',
+    alias: 'identity',
     describe: 'ARA Identity DID URI',
     required: true
   })
-  .option('secret', {
+  .option('s', {
     type: 'string',
-    alias: 's',
+    alias: 'secret',
     describe: 'Shared secret key value or file path',
     required: true
   })
-  .option('name', {
+  .option('n', {
     type: 'string',
-    alias: 'n',
+    alias: 'name',
     describe: 'Human readable name for network keys',
     required: true
   })
-  .option('out', {
+  .option('o', {
     type: 'string',
-    alias: 'o',
+    alias: 'out',
     describe: 'Output file name',
     required: true,
+  })
+  .option('d', {
+    type: 'boolean',
+    alias: 'derive',
+    describe: 'Derive key pair for network keys'
   })
 
 // eslint-disable-next-line
@@ -68,7 +73,8 @@ void async function main() {
 
   let publicKey = null
   let secretKey = null
-  let secret = Buffer.from(argv.secret)
+  let secret = null
+  let buffer = null
 
   try {
     const stat = await pify(fs.stat)(argv.secret)
@@ -93,6 +99,7 @@ void async function main() {
 
   const did = new DID(argv.identity)
 
+  secret = Buffer.from(argv.secret)
   password = crypto.blake2b(Buffer.from(password))
   publicKey = Buffer.from(did.identifier, 'hex')
 
@@ -104,26 +111,47 @@ void async function main() {
   try {
     secretKey = ss.decrypt(keystore, { key: password.slice(0, 16) })
   } catch (err) {
+    debug(err)
     return onfatal(new Error('Invalid passphrase'))
   }
 
   argv.out = resolve(argv.out)
 
-  const buffer = keys.generate({ secret, publicKey, secretKey })
+  try {
+    if (argv.derive) {
+      const keyPair = keys.derive({
+        secretKey, name: argv.name
+      })
 
-  const secretKeyring = keys.keyRing(argv.out, { secret: secretKey })
-  const publicKeyring = keys.keyRing(`${argv.out}.pub`, { secret })
-
-  if (false === await publicKeyring.has(argv.name)) {
-    await publicKeyring.append(argv.name, buffer.slice(0, keys.PK_SIZE))
-  } else {
-    warn('\'%s\' already exists in public key ring', argv.name)
+      buffer = keys.generate({
+        secret,
+        publicKey: keyPair.publicKey,
+        secretKey: keyPair.secretKey
+      })
+    } else {
+      buffer = keys.generate({ secret, publicKey, secretKey })
+    }
+  } catch (err) {
+    onfatal(err)
   }
 
-  if (false === await secretKeyring.has(argv.name)) {
-    await secretKeyring.append(argv.name, buffer.slice(keys.PK_SIZE))
-  } else {
-    warn('\'%s\' already exists in secret key ring', argv.name)
+  try {
+    const secretKeyring = keys.keyRing(argv.out, { secret: secretKey })
+    const publicKeyring = keys.keyRing(`${argv.out}.pub`, { secret })
+
+    if (false === await publicKeyring.has(argv.name)) {
+      await publicKeyring.append(argv.name, buffer.slice(0, keys.PK_SIZE))
+    } else {
+      warn('\'%s\' already exists in public key ring', argv.name)
+    }
+
+    if (false === await secretKeyring.has(argv.name)) {
+      await secretKeyring.append(argv.name, buffer.slice(keys.PK_SIZE))
+    } else {
+      warn('\'%s\' already exists in secret key ring', argv.name)
+    }
+  } catch (err) {
+    onfatal(err)
   }
 }()
 
