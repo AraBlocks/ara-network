@@ -3,7 +3,7 @@ const { defaults: dhtDefaults } = require('../dht')
 const discovery = require('discovery-swarm')
 const extend = require('extend')
 const crypto = require('ara-crypto')
-const debug = require('debug')('ara:network:discovery')
+// const debug = require('debug')('ara:network:discovery')
 
 const defaults = {
   hash: false,
@@ -23,15 +23,16 @@ const defaults = {
  * transports.
  *
  * @public
- *
  * @param {Object} opts
- *
  * @return {Object}
  */
 
 function createSwarm(opts) {
-  if (null == opts || 'object' !== typeof opts) { opts = {} }
-  debug('creating swarm')
+  if (!opts || 'object' !== typeof opts) {
+    // eslint-disable-next-line no-param-reassign
+    opts = {}
+  }
+  // eslint-disable-next-line no-param-reassign
   opts = extend(true, {}, defaults, opts)
   const server = discovery(opts)
   return server

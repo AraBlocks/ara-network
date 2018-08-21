@@ -3,7 +3,7 @@ const { defaults: dhtDefaults } = require('../dht')
 const discovery = require('discovery-channel')
 const extend = require('extend')
 const crypto = require('ara-crypto')
-const debug = require('debug')('ara:network:channel')
+// const debug = require('debug')('ara:network:channel')
 
 const defaults = {
   hash: false,
@@ -23,8 +23,11 @@ const defaults = {
  * @return {Object}
  */
 function createChannel(opts) {
-  if (null == opts || 'object' !== typeof opts) { opts = {} }
-  debug('creating channel')
+  if (!opts || 'object' !== typeof opts) {
+    // eslint-disable-next-line no-param-reassign
+    opts = {}
+  }
+  // eslint-disable-next-line no-param-reassign
   opts = extend(true, {}, defaults, opts)
   const channel = discovery(opts)
   return channel
