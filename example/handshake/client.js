@@ -40,7 +40,7 @@ async function configure(opts, program) {
       describe: 'Path to ARA network keys'
     })
 
-  if (argv.identity && 0 != argv.identity.indexOf('did:ara:')) {
+  if (argv.identity && 0 !== argv.identity.indexOf('did:ara:')) {
     argv.identity = `did:ara:${argv.identity}`
   }
 
