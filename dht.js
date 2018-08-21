@@ -1,7 +1,6 @@
 const BitTorrentDHT = require('bittorrent-dht')
 const crypto = require('ara-crypto')
 const extend = require('extend')
-// const debug = require('debug')('ara:network:dht')
 
 const defaults = {
   maxAge: Infinity,

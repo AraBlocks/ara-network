@@ -3,7 +3,6 @@ const { defaults: dhtDefaults } = require('../dht')
 const discovery = require('discovery-swarm')
 const extend = require('extend')
 const crypto = require('ara-crypto')
-// const debug = require('debug')('ara:network:discovery')
 
 const defaults = {
   hash: false,
