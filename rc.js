@@ -4,10 +4,6 @@ const rc = require('ara-runtime-configuration')
 
 const defaults = () => ({
   network: {
-    secrets: {
-      root: resolve(rc().data.root, 'secrets')
-    },
-
     identity: {
       root: resolve(rc().data.root, 'identities')
     },
