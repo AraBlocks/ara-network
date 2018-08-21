@@ -1,7 +1,7 @@
 const BitTorrentDHT = require('bittorrent-dht')
 const crypto = require('ara-crypto')
 const extend = require('extend')
-const debug = require('debug')('ara:network:dht')
+// const debug = require('debug')('ara:network:dht')
 
 const defaults = {
   maxAge: Infinity,
@@ -16,15 +16,16 @@ const defaults = {
  * Create a BitTorrent DHT server.
  *
  * @public
- *
  * @param {Object} [opts = {}]
- *
  * @return {Object}
  */
 
 function createServer(opts) {
-  if (!opts || 'object' !== typeof opts) { opts = {} }
-  debug('creating server')
+  if (!opts || 'object' !== typeof opts) {
+    // eslint-disable-next-line no-param-reassign
+    opts = {}
+  }
+  // eslint-disable-next-line no-param-reassign
   opts = extend(true, {}, defaults, opts)
   const server = new BitTorrentDHT(opts)
   return server
@@ -34,15 +35,16 @@ function createServer(opts) {
  * Create a BitTorrent DHT client.
  *
  * @public
- *
  * @param {[Object]} opts
- *
  * @return {Object}
  */
 
 function createClient(opts) {
-  if (!opts || 'object' !== typeof opts) { opts = {} }
-  debug('creating client')
+  if (!opts || 'object' !== typeof opts) {
+    // eslint-disable-next-line no-param-reassign
+    opts = {}
+  }
+  // eslint-disable-next-line no-param-reassign
   opts = extend(true, {}, defaults, opts)
   const client = new BitTorrentDHT(opts)
   return client
