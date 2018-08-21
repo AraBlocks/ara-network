@@ -76,7 +76,11 @@ class Handshake extends Duplex {
     if (State.OKAY === this.state.phase) {
       this.source.push(chunk)
     } else {
-      this.onmessage(chunk)
+      try {
+        this.onmessage(chunk)
+      } catch (err) {
+        this.emit('error', err)
+      }
     }
   }
 
