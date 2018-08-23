@@ -31,8 +31,9 @@ const { argv } = program
   .option('i', {
     type: 'string',
     alias: 'identity',
+    default: rc.network.identity.whoami,
     describe: 'ARA Identity DID URI',
-    required: true
+    required: true,
   })
   .option('s', {
     type: 'string',
@@ -49,6 +50,7 @@ const { argv } = program
     type: 'string',
     alias: 'out',
     describe: 'Output file name',
+    default: rc.network.identity.keyring,
     required: true,
   })
   .option('p', {
