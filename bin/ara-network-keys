@@ -1,17 +1,12 @@
 #!/usr/bin/env node
 
-const { resolve, basename } = require('path')
-const { warn, error } = require('ara-console')
+const { error, info } = require('ara-console')
+const { createKey } = require('../createKey')
+const { basename } = require('path')
 const inquirer = require('inquirer')
-const { DID } = require('did-uri')
 const program = require('yargs')
-const crypto = require('ara-crypto')
 const debug = require('debug')('ara:network:keys')
-const keys = require('../keys')
-const pify = require('pify')
 const rc = require('../rc')()
-const ss = require('ara-secret-storage')
-const fs = require('fs')
 
 const $0 = basename(process.argv[1] || 'ara-network-keys')
 
@@ -63,31 +58,13 @@ const { argv } = program
 void async function main() {
   process.title = $0
 
-  if (program.argv.debug) {
+  if (argv.debug) {
     /* eslint-disable-next-line global-require */
     require('debug').enable('ara:network*')
   }
 
-  if (!argv.secret) {
-    return onfatal(new Error('Missing shared secret'))
-  }
-
   if (!argv.personal && !argv.name) {
     return onfatal(new Error('Name required for non-personal keyrings'))
-  }
-
-  let publicKey = null
-  let secretKey = null
-  let secret = null
-  let buffer = null
-
-  try {
-    const stat = await pify(fs.stat)(argv.secret)
-    if (stat.isFile()) {
-      secret = await pify(fs.readFile)(argv.secret)
-    }
-  } catch (err) {
-    void err
   }
 
   let { password } = await inquirer.prompt([ {
@@ -98,79 +75,12 @@ void async function main() {
     'Passphrase:'
   } ])
 
-  if (argv.identity && 0 !== argv.identity.indexOf('did:ara:')) {
-    argv.identity = `did:ara:${argv.identity}`
-  }
-
-  const did = new DID(argv.identity)
-
-  secret = Buffer.from(argv.secret)
-  password = crypto.blake2b(Buffer.from(password))
-  publicKey = Buffer.from(did.identifier, 'hex')
-
-  // @TODO(jwerle): this should a function of AID
-  const hash = crypto.blake2b(publicKey).toString('hex')
-  const path = resolve(rc.network.identity.root, hash, 'keystore/ara')
-  const keystore = JSON.parse(await pify(fs.readFile)(path, 'utf8'))
-
   try {
-    secretKey = ss.decrypt(keystore, { key: password.slice(0, 16) })
-  } catch (err) {
-    debug(err)
-    return onfatal(new Error('Invalid passphrase'))
-  }
-
-  argv.out = resolve(argv.out)
-
-  try {
-    if (argv.personal) {
-      buffer = keys.generate({ secret, publicKey, secretKey })
-    } else {
-      const keyPair = keys.derive({
-        secretKey, name: argv.name
-      })
-
-      buffer = keys.generate({
-        secret,
-        publicKey: keyPair.publicKey,
-        secretKey: keyPair.secretKey
-      })
-    }
-  } catch (err) {
-    onfatal(err)
-  }
-
-  try {
-    const secretKeyring = keys.keyRing(argv.out, { secret: secretKey })
-    const publicKeyring = keys.keyRing(`${argv.out}.pub`, { secret })
-
-    if (argv.personal) {
-      if (false === await publicKeyring.has(publicKey)) {
-        await publicKeyring.append(publicKey, buffer.slice(0, keys.PK_SIZE))
-      } else {
-        warn('Public personal keys already exists in public key ring')
-      }
-
-      if (false === await secretKeyring.has(secretKey)) {
-        await secretKeyring.append(secretKey, buffer.slice(0, keys.PK_SIZE))
-      } else {
-        warn('Secret personal keys already exists in secret key ring')
-      }
-    } else {
-      if (false === await publicKeyring.has(argv.name)) {
-        await publicKeyring.append(argv.name, buffer.slice(0, keys.PK_SIZE))
-      } else {
-        warn('\'%s\' already exists in public key ring', argv.name)
-      }
-
-      if (false === await secretKeyring.has(argv.name)) {
-        await secretKeyring.append(argv.name, buffer.slice(keys.PK_SIZE))
-      } else {
-        warn('\'%s\' already exists in secret key ring', argv.name)
-      }
-    }
-  } catch (err) {
-    onfatal(err)
+    await createKey(Object.assign({}, argv, { password }))
+    info(`\`${argv.name}\` created successfully in ${argv.out} keyring`)
+    return process.exit(0)
+  } catch (e) {
+    onfatal(e)
   }
 }()
 
