@@ -7,6 +7,8 @@ const crypto = require('ara-crypto')
 const mutex = require('mutexify')
 const pump = require('pump')
 const raf = require('random-access-file')
+const rah = require('random-access-http')
+const url = require('url')
 
 // 34 = 2 + (2 * crypto_secretbox_MACBYTES)
 const kBoxHeaderSize = 34
@@ -174,8 +176,14 @@ class Keyring extends EventEmitter {
         if (0 === storage.length) {
           throw new TypeError('Keyring: Storage path cannot be empty.')
         } else {
-          // eslint-disable-next-line no-param-reassign
-          storage = raf(storage)
+          const uri = url.parse(storage)
+          if ('http:' === uri.protocol || 'https:' === uri.protocol) {
+            // eslint-disable-next-line no-param-reassign
+            storage = rah(storage)
+          } else {
+            // eslint-disable-next-line no-param-reassign
+            storage = raf(storage)
+          }
         }
       } else if ('function' === typeof storage) {
         // eslint-disable-next-line no-param-reassign
