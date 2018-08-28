@@ -45,6 +45,7 @@
     "dns-discovery": "^6.1.0",
     "extend": "^3.0.1",
     "get-uri": "^2.0.2",
+    "got": "^9.1.0",
     "inquirer": "^6.0.0",
     "is-buffer": "^2.0.2",
     "merkle-tree-stream": "^3.0.3",
