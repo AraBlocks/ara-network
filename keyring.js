@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 const { EventEmitter } = require('events')
 const isBuffer = require('is-buffer')
 const collect = require('collect-stream')
@@ -82,7 +83,6 @@ function computeRoots(storage, cb) {
   checkCallback(cb)
 
   return new Promise((resolve, reject) => {
-    // eslint-disable-next-line no-param-reassign
     cb = ensureCallback(cb, resolve, reject)
 
     if (!storage || 'object' !== typeof storage) {
@@ -179,19 +179,14 @@ class Keyring extends EventEmitter {
         } else {
           const uri = url.parse(storage)
           if ('http:' === uri.protocol || 'https:' === uri.protocol) {
-            // eslint-disable-next-line no-param-reassign
             storage = rah(storage)
-            // eslint-disable-next-line no-param-reassign
             storage._stat = stathttp(uri.href)
-            // eslint-disable-next-line no-param-reassign
             storage.statable = true
           } else {
-            // eslint-disable-next-line no-param-reassign
             storage = raf(storage)
           }
         }
       } else if ('function' === typeof storage) {
-        // eslint-disable-next-line no-param-reassign
         storage = storage(this, opts)
         if (!storage || 'object' !== typeof storage) {
           throw new TypeError('Keyring: Storage must resolve to an object.')
@@ -292,7 +287,6 @@ class Keyring extends EventEmitter {
       this.storage.preferReadonly = true
       process.nextTick(onopen, null)
       if ('function' !== typeof storage._openReadnnly) {
-        // eslint-disable-next-line no-param-reassign
         storage._openReadonly = (req) => {
           req.callback(null)
         }
@@ -455,7 +449,6 @@ class Keyring extends EventEmitter {
 
     checkCallback(cb)
     return new Promise((resolve, reject) => {
-      // eslint-disable-next-line no-param-reassign
       cb = ensureCallback(cb, resolve, reject)
 
       if (isReady) {
@@ -488,7 +481,6 @@ class Keyring extends EventEmitter {
 
     checkCallback(cb)
     return new Promise((resolve, reject) => {
-      // eslint-disable-next-line no-param-reassign
       cb = ensureCallback(cb, resolve, reject)
 
       this.ready(() => {
@@ -521,7 +513,6 @@ class Keyring extends EventEmitter {
 
     checkCallback(cb)
     return new Promise((resolve, reject) => {
-      // eslint-disable-next-line no-param-reassign
       cb = ensureCallback(cb, resolve, reject)
 
       this.ready(() => {
@@ -550,7 +541,6 @@ class Keyring extends EventEmitter {
     checkCallback(cb)
 
     return new Promise((resolve, reject) => {
-      // eslint-disable-next-line no-param-reassign
       cb = ensureCallback(cb, resolve, reject)
 
       if (false === isBuffer(key)) {
@@ -596,7 +586,6 @@ class Keyring extends EventEmitter {
   get(name, cb) {
     checkCallback(cb)
     return new Promise((resolve, reject) => {
-      // eslint-disable-next-line no-param-reassign
       cb = ensureCallback(cb, resolve, reject)
 
       this.ready(() => {
@@ -621,7 +610,6 @@ class Keyring extends EventEmitter {
   access(name, cb) {
     checkCallback(cb)
     return new Promise((resolve, reject) => {
-      // eslint-disable-next-line no-param-reassign
       cb = ensureCallback(cb, resolve, reject)
 
       this.ready(() => {
@@ -652,7 +640,6 @@ class Keyring extends EventEmitter {
   has(name, cb) {
     checkCallback(cb)
     return new Promise((resolve) => {
-      // eslint-disable-next-line no-param-reassign
       cb = ensureCallback(cb, resolve)
 
       this.ready(() => {
@@ -677,7 +664,6 @@ class Keyring extends EventEmitter {
 
     checkCallback(cb)
     return new Promise((resolve, reject) => {
-      // eslint-disable-next-line no-param-reassign
       cb = ensureCallback(cb, resolve, reject)
 
       this.ready(() => {
@@ -702,7 +688,6 @@ class Keyring extends EventEmitter {
     const { storage, secretKey } = this
 
     return new Promise((resolve, reject) => {
-      // eslint-disable-next-line no-param-reassign
       cb = ensureCallback(cb, resolve, reject)
 
       this.ready(() => {
@@ -761,12 +746,10 @@ class Keyring extends EventEmitter {
 
     function onwrite(chunk, enc, done) {
       if (keyring.decryptable) {
-        // eslint-disable-next-line no-param-reassign
         chunk = keyring.decrypt(chunk, name, keyring)
       }
 
       if (keyring.unpackable) {
-        // eslint-disable-next-line no-param-reassign
         chunk = keyring.unpack(chunk, name, keyring)
       }
 
@@ -835,12 +818,10 @@ class Keyring extends EventEmitter {
 
     function onthrough(chunk, enc, done) {
       if (keyring.packable) {
-        // eslint-disable-next-line no-param-reassign
         chunk = keyring.pack(chunk, name, keyring)
       }
 
       if (keyring.encryptable) {
-        // eslint-disable-next-line no-param-reassign
         chunk = keyring.encrypt(chunk, name, keyring)
       }
 
