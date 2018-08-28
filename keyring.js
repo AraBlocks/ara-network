@@ -5,6 +5,7 @@ const through = require('through2')
 const merkle = require('merkle-tree-stream/generator')
 const crypto = require('ara-crypto')
 const mutex = require('mutexify')
+const fetch = require('got')
 const pump = require('pump')
 const raf = require('random-access-file')
 const rah = require('random-access-http')
@@ -180,6 +181,10 @@ class Keyring extends EventEmitter {
           if ('http:' === uri.protocol || 'https:' === uri.protocol) {
             // eslint-disable-next-line no-param-reassign
             storage = rah(storage)
+            // eslint-disable-next-line no-param-reassign
+            storage._stat = stathttp(uri.href)
+            // eslint-disable-next-line no-param-reassign
+            storage.statable = true
           } else {
             // eslint-disable-next-line no-param-reassign
             storage = raf(storage)
@@ -948,6 +953,38 @@ function statStorage(storage, cb) {
     process.nextTick(cb, null, { size: storage.length })
   } else {
     process.nextTick(cb, null, { size: 0 })
+  }
+}
+
+/**
+ * "Stat" a resource at a given HTTP URI
+ * @private
+ */
+function stathttp(uri) {
+  return function stat(req) {
+    fetch(uri, { method: 'HEAD' })
+      .then(onresponse)
+      .catch(onerror)
+
+    function onerror(err) {
+      req.callback(err)
+    }
+
+    function onresponse(res) {
+      const stats = { size: 0 }
+      const mtime = res.headers['last-modified']
+      const size = res.headers['content-length']
+
+      if (size) {
+        stats.size = parseInt(size, 10)
+      }
+
+      if (mtime) {
+        stats.mtime = Date.parse(mtime)
+      }
+
+      return req.callback(null, stats)
+    }
   }
 }
 
