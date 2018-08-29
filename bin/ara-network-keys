@@ -43,8 +43,8 @@ const { argv } = program
   })
   .option('n', {
     type: 'string',
-    alias: 'name',
-    describe: 'Human readable name for network keys',
+    alias: 'network',
+    describe: 'Human readable network name for keys generated',
   })
   .option('o', {
     type: 'string',
@@ -72,8 +72,8 @@ void async function main() {
     return onfatal(new Error('Missing shared secret'))
   }
 
-  if (!argv.personal && !argv.name) {
-    return onfatal(new Error('Name required for non-personal keyrings'))
+  if (!argv.personal && !argv.network) {
+    return onfatal(new Error('Network name required for non-personal keyrings'))
   }
 
   let publicKey = null
@@ -127,7 +127,7 @@ void async function main() {
       buffer = keys.generate({ secret, publicKey, secretKey })
     } else {
       const keyPair = keys.derive({
-        secretKey, name: argv.name
+        secretKey, name: argv.network
       })
 
       buffer = keys.generate({
@@ -157,16 +157,16 @@ void async function main() {
         warn('Secret personal keys already exists in secret key ring')
       }
     } else {
-      if (false === await publicKeyring.has(argv.name)) {
-        await publicKeyring.append(argv.name, buffer.slice(0, keys.PK_SIZE))
+      if (false === await publicKeyring.has(argv.network)) {
+        await publicKeyring.append(argv.network, buffer.slice(0, keys.PK_SIZE))
       } else {
-        warn('\'%s\' already exists in public key ring', argv.name)
+        warn(`'${argv.network}' already exists in public key ring`)
       }
 
-      if (false === await secretKeyring.has(argv.name)) {
-        await secretKeyring.append(argv.name, buffer.slice(keys.PK_SIZE))
+      if (false === await secretKeyring.has(argv.network)) {
+        await secretKeyring.append(argv.network, buffer.slice(keys.PK_SIZE))
       } else {
-        warn('\'%s\' already exists in secret key ring', argv.name)
+        warn(`'${argv.network}' already exists in secret key ring`)
       }
     }
   } catch (err) {
