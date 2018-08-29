@@ -72,6 +72,12 @@ void async function main() {
     return onfatal(new Error('Missing shared secret'))
   }
 
+  if (argv.name && 'string' === typeof argv.name && !argv.network) {
+    warn('Please use \'--network\' instead of \'--name\'.')
+    // eslint-disable-next-line no-param-reassign
+    argv.network = argv.name
+  }
+
   if (!argv.personal && !argv.network) {
     return onfatal(new Error('Network name required for non-personal keyrings'))
   }
