@@ -1,15 +1,17 @@
 #!/usr/bin/env node
+/* eslint-disable  import/no-dynamic-require */
+/* eslint-disable global-require */
 
 const { info, warn, error } = require('ara-console')
 const { basename, resolve } = require('path')
 const onBeforeExit = require('async-exit-hook')
 const { fork } = require('child_process')
-const package = require('../package')
 const program = require('yargs')
 const debug = require('debug')('ara:network:node')
+const pkg = require('../package.json')
 const rc = require('ara-runtime-configuration')()
 
-const $0 = basename(process.argv[1] || `${package.name}-node`)
+const $0 = basename(process.argv[1] || `${pkg.name}-node`)
 
 module.exports = { main, boot, program }
 
@@ -17,21 +19,21 @@ void program
   .wrap(80)
   .help(false)
   .version(false)
-  .alias('help', 'h')
-  .alias('version', 'V')
-  .option('debug', {
+  .alias('h', 'help')
+  .alias('V', 'version')
+  .option('D', {
     type: 'boolean',
-    alias: 'D',
-    describe: "Enable debug output"
+    alias: 'debug',
+    describe: 'Enable debug output'
   })
-  .option('conf', {
+  .option('C', {
     type: 'string',
-    alias: 'C',
-    describe: "Path to configuration file"
+    alias: 'conf',
+    describe: 'Path to configuration file'
   })
 
 // from command line
-if (null == module.parent) {
+if (!module.parent) {
   process.on('unhandledRejection', onfatal)
   process.on('uncaughtException', onfatal)
   main()
@@ -42,7 +44,6 @@ if (null == module.parent) {
  *
  * @public
  */
-
 async function main() {
   const { t, type = t } = program.argv
   const { V, version = V } = program.argv
@@ -50,38 +51,37 @@ async function main() {
   process.title = $0
 
   if (version) {
-    info("%s version: %s", package.name, package.version)
+    info('%s version: %s', pkg.name, pkg.version)
     process.exit(0)
   }
 
-  if (null == type) {
+  if (!type) {
     help()
+
     if (program.argv.help) {
       program.showHelp()
-      return process.exit(0)
+      process.exit(0)
     } else if (process.argv.length <= 2) {
       program.showHelp()
-      return process.exit(1)
+      process.exit(1)
     }
   }
 
   if (program.argv.debug) {
+    // eslint-disable-next-line global-require
     require('debug').enable('ara:network*')
   }
 
   if (program.argv['child-process']) {
     process.on('message', onmessage)
+  } else if (type && false === Array.isArray(type)) {
+    await boot({ type })
   } else {
-    if (type && false == Array.isArray(type)) {
-      await boot({type})
-    } else {
-      void warn(
-        "Multiple network node types given. Ignoring other arguments."
-      )
+    warn('Multiple network node types given. Ignoring other arguments.')
 
-      for (const k of type) {
-        await boot({type: k})
-      }
+    for (const k of type) {
+      // eslint-disable-next-line no-await-in-loop
+      await boot({ type: k })
     }
   }
 }
@@ -90,15 +90,13 @@ async function main() {
  * Fork process and boot worker node.
  *
  * @public
- *
  * @param {Object} opts
  * @param {Object} opts.type
- *
  * @return {cluster.Worker}
  */
 
-async function boot({type}) {
-  const env = process.env
+async function boot({ type }) {
+  const { env } = process
   const cwd = process.cwd()
   const argv = process.argv.slice(2).concat('--child-process')
   const argv1 = process.argv[1]
@@ -106,18 +104,19 @@ async function boot({type}) {
   const worker = fork(argv1, argv, { stdio, cwd, env })
   const { pid, id = pid } = worker
 
-  worker.send({id, type})
+  worker.send({ id, type })
   worker.on('error', onerror)
   return worker
+
   function onerror(err) {
-    error("worker#%s: %s: error:", id, type, err.message)
+    error('worker#%s: %s: error:', id, type, err.message)
   }
 }
 
 /**
  * Configures program usage
+ * @private
  */
-
 function help() {
   program
     .help(true)
@@ -126,7 +125,7 @@ function help() {
     .option('type', {
       type: 'string',
       alias: 't',
-      describe: "Node type to start"
+      describe: 'Node type to start'
     })
 }
 
@@ -134,33 +133,35 @@ function help() {
  * Worker message callback
  *
  * @private
- *
  * @param {Object} event
  */
-
-async function onmessage({id, type}) {
+async function onmessage({ id, type }) {
   let node = null
-  const boot = (paths) =>  {
-    try { node = require(paths.shift()) }
-    catch (err) {
+
+  function bootnode(paths) {
+    try {
+      node = require(paths.shift())
+    } catch (err) {
       debug(err)
-      if (paths.length) { return boot(paths) } else {
-        error("worker: %s: Unknown node type: %s", type, err.message)
-        return process.exit(1)
+      if (paths.length) {
+        bootnode(paths)
+      } else {
+        error('worker: %s: Unknown node type: %s', type, err.message)
+        process.exit(1)
       }
     }
   }
 
   // Different places to search for the corresponding node
-  boot([
+  bootnode([
     `ara-network-node-${type}`,
     type,
     resolve(type)
   ])
 
-  if (null == node) {
-    error("Unable to resolve node type '%s'.", type)
-    return process.exit(1)
+  if (!node) {
+    error('Unable to resolve node type \'%s\'.', type)
+    process.exit(1)
   }
 
   const {
@@ -170,43 +171,47 @@ async function onmessage({id, type}) {
     stop,
   } = node
 
-  if ('function' != typeof start) {
-    error("Node type '%s' is not startable (Missing 'start' function)", type)
-    return process.exit(1)
+  if ('function' !== typeof start) {
+    error('Node type \'%s\' is not startable (Missing \'start\' function)', type)
+    process.exit(1)
   }
 
-  if ('function' != typeof stop) {
-    error("Node type '%s' is not stopable (Missing 'stop' function)", type)
-    return process.exit(1)
+  if ('function' !== typeof stop) {
+    error('Node type \'%s\' is not stopable (Missing \'stop\' function)', type)
+    process.exit(1)
   }
 
   const multipleTypesGiven = (
     Array.isArray(program.argv.type) ||
     Array.isArray(program.argv.t))
 
-  if ('function' == typeof configure) {
+  if ('function' === typeof configure) {
     const conf = {}
-    if (rc.network && rc.network.node && 'object' == typeof rc.network.node[type]) {
+
+    if (rc.network && rc.network.node && 'object' === typeof rc.network.node[type]) {
       Object.assign(conf, rc.network.node[type])
     }
+
     program.usage(`usage: $0 -t ${type} [options]`).help(true)
+
     const promise = configure(conf, program)
-    void program.argv // parse
-    info("Configuring network node '%s'.", type)
+    // force parse argv
+    void program.argv
+    info('Configuring network node \'%s\'.', type)
     await promise
   }
 
   const argv = multipleTypesGiven ? {} : program.argv
 
   try {
-    info("Starting network node '%s'", type)
+    info('Starting network node \'%s\'', type)
     if (true !== await start(argv)) {
       onfatal(new Error(`Failed to start network node '${type}'`))
     }
   } catch (err) {
     debug(err)
-    error("fatal: Network node '%s' encountered an error: ", err.message)
-    return process.exit(1)
+    error('fatal: Network node \'%s\' encountered an error:', err.message)
+    process.exit(1)
   }
 
   process.title += ` (${type})`
@@ -216,11 +221,11 @@ async function onmessage({id, type}) {
   onBeforeExit(onexit)
 
   function onerror(err) {
-    error("worker#%s: %s: error:", id, type, err.message)
+    error('worker#%s: %s: error:', id, type, err.message)
   }
 
   async function onexit(done) {
-    warn("Stopping network node '%s'", type)
+    warn('Stopping network node \'%s\'', type)
     await stop(argv)
     done()
   }
@@ -230,12 +235,10 @@ async function onmessage({id, type}) {
  * Handles fatal errors.
  *
  * @private
- *
  * @param {Error} err
  */
-
 function onfatal(err) {
   debug(err)
-  error("fatal:", err.message)
+  error('fatal:', err.message)
   process.exit(1)
 }
