@@ -9,6 +9,7 @@ const crypto = require('ara-crypto')
 const debug = require('debug')('ara:network:keys')
 const keys = require('../keys')
 const pify = require('pify')
+const pkg = require('../package.json')
 const rc = require('../rc')()
 const ss = require('ara-secret-storage')
 const fs = require('fs')
@@ -18,48 +19,87 @@ const $0 = basename(process.argv[1] || 'ara-network-keys')
 process.on('unhandledRejection', onfatal)
 process.on('uncaughtException', onfatal)
 
-const { argv } = program
-  .wrap(100)
+// program usage
+program
+  .usage('usage: $0 [-hDPV] [options]')
+  .wrap(null)
+
+// booleans
+program
+  .group([ 'help', 'version', 'debug' ], 'General Options:')
   .alias('help', 'h')
   .alias('version', 'V')
-  .usage('usage: $0 [-hDV] [options] [did]')
-  .option('D', {
-    type: 'boolean',
-    alias: 'debug',
+  .option('debug', {
+    alias: 'D',
     describe: 'Enable debug output'
   })
-  .option('i', {
-    type: 'string',
-    alias: 'identity',
+
+// parameters
+program
+  .group([ 'identity' ], 'Identity Options:')
+  .option('identity', {
+    alias: 'i',
     default: rc.network.identity.whoami,
-    describe: 'ARA Identity DID URI',
-    required: true,
-  })
-  .option('s', {
-    type: 'string',
-    alias: 'secret',
-    describe: 'Shared secret key value or file path',
-    required: true
-  })
-  .option('n', {
-    type: 'string',
-    alias: 'network',
-    describe: 'Human readable network name for keys generated',
-  })
-  .option('o', {
-    type: 'string',
-    alias: 'out',
-    describe: 'Output file name',
-    default: rc.network.identity.keyring,
-    required: true,
-  })
-  .option('p', {
-    type: 'boolean',
-    alias: 'personal',
-    describe: 'Generate personal network keys for given identity'
+    requiresArg: true,
+
+    describe:
+`A valid, local, and resolvable Ara identity DID
+URI of the owner of the given keyring. You will be
+prompted for the associated passphrase. (Required)`,
+
+    defaultDescription: (
+      rc.network.identity.whoami
+        ? `${rc.network.identity.whoami.slice(0, 16)}...`
+        : undefined
+    )
   })
 
-// eslint-disable-next-line
+program
+  .group([ 'personal', 'secret', 'network', 'keyring' ], 'Keyring Options:')
+  .option('personal', {
+    alias: 'P',
+    describe:
+`Generate personal network keys for given identity.
+Personal network keys are stored in the public and
+secret keyrings named by the given identity's public
+and secret key respectively.`
+  })
+  .option('secret', {
+    alias: 's',
+    requiresArg: true,
+    describe:
+`A shared secret key value or a path to a file that
+contains a shared secret key. (Required)`,
+  })
+  .option('network', {
+    alias: 'n',
+    requiresArg: true,
+    describe:
+`A human readable network name for keys generated
+and appended to the given keyring. (Required)`,
+  })
+  .option('keyring', {
+    alias: 'k',
+    describe: 'Keyring output path (Required)',
+    default: rc.network.identity.keyring,
+    requiresArg: true,
+  })
+  .option('out', {
+    alias: 'o',
+    hidden: true
+  })
+
+program
+  .epilog(`
+For documentation and more information, please visit ${pkg.homepage}
+For bugs and other issues, please visit ${pkg.bugs.url}`)
+
+// remove type boolean type annotations
+// see https://github.com/yargs/yargs/issues/319
+void program.getOptions().boolean.splice(-2)
+const { argv } = program
+
+// eslint-disable-next-line wrap-iife
 void async function main() {
   process.title = $0
 
@@ -69,7 +109,25 @@ void async function main() {
   }
 
   if (!argv.secret) {
-    return onfatal(new Error('Missing shared secret'))
+    const err = 'Missing shared secret. See \'ank --help\' for command usage.'
+    onfatal(new Error(err))
+    return
+  }
+
+  if (argv.out && !argv.keyring) {
+    argv.keyring = argv.out
+  }
+
+  if (!argv.keyring) {
+    const err = 'Missing . See \'ank --help\' for command usage.'
+    onfatal(new Error(err))
+    return
+  }
+
+  if (!argv.identity) {
+    const err = 'Missing . See \'ank --help\' for command usage.'
+    onfatal(new Error(err))
+    return
   }
 
   if (argv.name && 'string' === typeof argv.name && !argv.network) {
@@ -79,7 +137,8 @@ void async function main() {
   }
 
   if (!argv.personal && !argv.network) {
-    return onfatal(new Error('Network name required for non-personal keyrings'))
+    onfatal(new Error('Network name required for non-personal keyrings'))
+    return
   }
 
   let publicKey = null
@@ -123,10 +182,11 @@ void async function main() {
     secretKey = ss.decrypt(keystore, { key: password.slice(0, 16) })
   } catch (err) {
     debug(err)
-    return onfatal(new Error('Invalid passphrase'))
+    onfatal(new Error('Invalid passphrase'))
+    return
   }
 
-  argv.out = resolve(argv.out)
+  argv.keyring = resolve(argv.keyring)
 
   try {
     if (argv.personal) {
@@ -147,8 +207,8 @@ void async function main() {
   }
 
   try {
-    const secretKeyring = keys.keyRing(argv.out, { secret: secretKey })
-    const publicKeyring = keys.keyRing(`${argv.out}.pub`, { secret })
+    const secretKeyring = keys.keyRing(argv.keyring, { secret: secretKey })
+    const publicKeyring = keys.keyRing(`${argv.keyring}.pub`, { secret })
 
     if (argv.personal) {
       if (false === await publicKeyring.has(publicKey)) {
