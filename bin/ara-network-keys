@@ -61,8 +61,8 @@ program
     describe:
 `Generate personal network keys for given identity.
 Personal network keys are stored in the public and
-secret keyrings named by the given identity's public
-and secret key respectively.`
+secret keyrings named by the given identity's
+public and secret key respectively.`
   })
   .option('secret', {
     alias: 's',
