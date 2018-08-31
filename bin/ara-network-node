@@ -16,21 +16,10 @@ const $0 = basename(process.argv[1] || `${pkg.name}-node`)
 module.exports = { main, boot, program }
 
 void program
-  .wrap(80)
   .help(false)
   .version(false)
-  .alias('h', 'help')
-  .alias('V', 'version')
-  .option('D', {
-    type: 'boolean',
-    alias: 'debug',
-    describe: 'Enable debug output'
-  })
-  .option('C', {
-    type: 'string',
-    alias: 'conf',
-    describe: 'Path to configuration file'
-  })
+  .alias('help', 'h')
+  .alias('version', 'V')
 
 // from command line
 if (!module.parent) {
@@ -119,14 +108,24 @@ async function boot({ type }) {
  */
 function help() {
   program
+    .wrap(null)
     .help(true)
     .version(true)
-    .usage('usage: $0 [-hV] [options]')
+    .usage('usage: $0 [-hDV] [options]')
+    .option('debug', {
+      alias: 'D',
+      describe: 'Enable debug output'
+    })
     .option('type', {
-      type: 'string',
       alias: 't',
       describe: 'Node type to start'
     })
+    .option('conf', {
+      alias: 'C',
+      describe: 'Path to configuration file'
+    })
+
+  void program.getOptions().boolean.splice(-2)
 }
 
 /**
