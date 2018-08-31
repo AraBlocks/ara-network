@@ -37,57 +37,62 @@ program
 // parameters
 program
   .group([ 'identity' ], 'Identity Options:')
-  .option('identity', {
-    alias: 'i',
-    default: rc.network.identity.whoami,
-    requiresArg: true,
 
-    describe:
+program.option('identity', {
+  alias: 'i',
+  default: rc.network.identity.whoami,
+  requiresArg: true,
+  required: true,
+
+  defaultDescription: (
+    rc.network.identity.whoami
+      ? `${rc.network.identity.whoami.slice(0, 16)}...`
+      : undefined
+  ),
+
+  describe:
 `A valid, local, and resolvable Ara identity DID
 URI of the owner of the given keyring. You will be
-prompted for the associated passphrase. (Required)`,
-
-    defaultDescription: (
-      rc.network.identity.whoami
-        ? `${rc.network.identity.whoami.slice(0, 16)}...`
-        : undefined
-    )
-  })
+prompted for the associated passphrase`,
+})
 
 program
   .group([ 'personal', 'secret', 'network', 'keyring' ], 'Keyring Options:')
-  .option('personal', {
-    alias: 'P',
-    describe:
+
+program.option('personal', {
+  alias: 'P',
+  describe:
 `Generate personal network keys for given identity.
 Personal network keys are stored in the public and
 secret keyrings named by the given identity's
-public and secret key respectively.`
-  })
-  .option('secret', {
-    alias: 's',
-    requiresArg: true,
-    describe:
+public and secret key respectively`
+})
+
+program.option('secret', {
+  alias: 's',
+  requiresArg: true,
+  required: true,
+  describe:
 `A shared secret key value or a path to a file that
-contains a shared secret key. (Required)`,
-  })
-  .option('network', {
-    alias: 'n',
-    requiresArg: true,
-    describe:
+contains a shared secret key`,
+})
+
+program.option('network', {
+  alias: 'n',
+  requiresArg: true,
+  required: true,
+  describe:
 `A human readable network name for keys generated
-and appended to the given keyring. (Required)`,
-  })
-  .option('keyring', {
-    alias: 'k',
-    describe: 'Keyring output path (Required)',
-    default: rc.network.identity.keyring,
-    requiresArg: true,
-  })
-  .option('out', {
-    alias: 'o',
-    hidden: true
-  })
+and appended to the given keyring`,
+})
+
+program.option('keyring', {
+  alias: 'k',
+  default: rc.network.identity.keyring,
+  describe: 'Keyring output path',
+  required: true,
+  requiresArg: true,
+})
 
 program
   .epilog(`
@@ -110,22 +115,6 @@ void async function main() {
 
   if (!argv.secret) {
     const err = 'Missing shared secret. See \'ank --help\' for command usage.'
-    onfatal(new Error(err))
-    return
-  }
-
-  if (argv.out && !argv.keyring) {
-    argv.keyring = argv.out
-  }
-
-  if (!argv.keyring) {
-    const err = 'Missing . See \'ank --help\' for command usage.'
-    onfatal(new Error(err))
-    return
-  }
-
-  if (!argv.identity) {
-    const err = 'Missing . See \'ank --help\' for command usage.'
     onfatal(new Error(err))
     return
   }
