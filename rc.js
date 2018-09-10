@@ -10,7 +10,15 @@ const defaults = () => ({
 
     keyrings: {
       root: resolve(rc().data.root, 'keyrings')
-    }
+    },
+
+    discovery: {
+      channel: { },
+      swarm: { },
+    },
+
+    dht: { },
+    dns: { },
   }
 })
 
