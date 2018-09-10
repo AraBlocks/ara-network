@@ -1,15 +1,16 @@
 const BitTorrentDHT = require('bittorrent-dht')
 const crypto = require('ara-crypto')
 const extend = require('extend')
+const rc = require('./rc')()
 
-const defaults = {
+const defaults = Object.assign({
   maxAge: Infinity,
   verify: crypto.verify,
 
   get nodeId() {
     return crypto.randomBytes(32)
   }
-}
+}, rc.network.dht)
 
 /**
  * Create a BitTorrent DHT server.
