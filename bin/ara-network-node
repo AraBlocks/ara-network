@@ -18,8 +18,33 @@ module.exports = { main, boot, program }
 void program
   .help(false)
   .version(false)
+  .group([ 'help', 'debug', 'version' ], 'General Options:')
   .alias('help', 'h')
+  .alias('debug', 'D')
   .alias('version', 'V')
+  .option('help', {
+    describe: 'Show help',
+    type: 'boolean',
+  })
+  .option('debug', {
+    describe: 'Enable debug output',
+    global: true,
+    type: 'boolean',
+  })
+  .option('version', {
+    describe: 'Show version number',
+    global: false,
+    type: 'boolean',
+  })
+  .group([ 'type', 'conf' ], 'Configuration Options:')
+  .option('type', {
+    alias: 't',
+    describe: 'Node type to start'
+  })
+  .option('conf', {
+    alias: 'C',
+    describe: 'Path to configuration file'
+  })
 
 // from command line
 if (!module.parent) {
@@ -39,14 +64,12 @@ async function main() {
 
   process.title = $0
 
-  if (version) {
+  if (version && !type) {
     info('%s version: %s', pkg.name, pkg.version)
     process.exit(0)
   }
 
   if (!type) {
-    help()
-
     if (program.argv.help) {
       program.showHelp()
       process.exit(0)
@@ -100,32 +123,6 @@ async function boot({ type }) {
   function onerror(err) {
     error('worker#%s: %s: error:', id, type, err.message)
   }
-}
-
-/**
- * Configures program usage
- * @private
- */
-function help() {
-  program
-    .wrap(null)
-    .help(true)
-    .version(true)
-    .usage('usage: $0 [-hDV] [options]')
-    .option('debug', {
-      alias: 'D',
-      describe: 'Enable debug output'
-    })
-    .option('type', {
-      alias: 't',
-      describe: 'Node type to start'
-    })
-    .option('conf', {
-      alias: 'C',
-      describe: 'Path to configuration file'
-    })
-
-  void program.getOptions().boolean.splice(-2)
 }
 
 /**
