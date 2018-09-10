@@ -3,8 +3,9 @@ const { defaults: dhtDefaults } = require('../dht')
 const discovery = require('discovery-channel')
 const extend = require('extend')
 const crypto = require('ara-crypto')
+const rc = require('../rc')()
 
-const defaults = {
+const defaults = Object.assign({
   hash: false,
   dns: dnsDefaults,
   dht: dhtDefaults,
@@ -12,7 +13,7 @@ const defaults = {
   get id() {
     return crypto.randomBytes(32)
   },
-}
+}, rc.network.discovery.channel)
 
 /**
  * Creates a discovery channelthat uses DNS
