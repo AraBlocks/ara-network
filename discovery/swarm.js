@@ -3,8 +3,9 @@ const { defaults: dhtDefaults } = require('../dht')
 const discovery = require('discovery-swarm')
 const extend = require('extend')
 const crypto = require('ara-crypto')
+const rc = require('../rc')()
 
-const defaults = {
+const defaults = Object.assign({
   hash: false,
   utp: true,
   tcp: true,
@@ -14,7 +15,7 @@ const defaults = {
   get id() {
     return crypto.randomBytes(32)
   },
-}
+}, rc.network.discovery.swarm)
 
 /**
  * Creates a discovery swarm server that uses DNS
