@@ -4,6 +4,7 @@ const rc = require('./rc')()
 
 const defaults = Object.assign({
   multicast: true,
+  interval: 1 * 60 * 1000,
   loopback: true,
   domain: 'ara.local',
   limit: 10000,

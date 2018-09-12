@@ -6,6 +6,7 @@ const rc = require('./rc')()
 const defaults = Object.assign({
   maxAge: Infinity,
   verify: crypto.verify,
+  interval: 2 * 60 * 1000,
 
   get nodeId() {
     return crypto.randomBytes(32)
