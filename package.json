@@ -59,8 +59,7 @@
     "readable-stream": "^2.3.6",
     "signalhub": "^4.9.0",
     "through2": "^2.0.3",
-    "yargs": "^11.0.0",
-    "utp-native": "^2.0.1"
+    "yargs": "^11.0.0"
   },
   "devDependencies": {
     "ava": "^0.25.0",
