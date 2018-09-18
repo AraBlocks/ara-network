@@ -210,8 +210,6 @@ async function onmessage({ id, type }) {
     process.exit(1)
   }
 
-  process.title += ` (${type})`
-
   const instance = await getInstance(argv)
   instance.on('error', onerror)
   onBeforeExit(onexit)
