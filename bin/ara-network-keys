@@ -207,7 +207,7 @@ void async function main() {
       }
 
       if (false === await secretKeyring.has(secretKey)) {
-        await secretKeyring.append(secretKey, buffer.slice(0, keys.PK_SIZE))
+        await secretKeyring.append(secretKey, buffer.slice(keys.PK_SIZE))
       } else {
         warn('Secret personal keys already exists in secret key ring')
       }
