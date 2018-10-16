@@ -4,14 +4,6 @@ const rc = require('ara-runtime-configuration')
 
 const defaults = () => ({
   network: {
-    identity: {
-      root: resolve(rc().data.root, 'identities')
-    },
-
-    keyrings: {
-      root: resolve(rc().data.root, 'keyrings')
-    },
-
     discovery: {
       channel: { },
       swarm: { },
