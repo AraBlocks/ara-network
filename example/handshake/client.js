@@ -2,7 +2,6 @@
 const { unpack, keyRing } = require('../../keys')
 const { createChannel } = require('../../discovery/channel')
 const { Handshake } = require('../../handshake')
-const ss = require('ara-secret-storage')
 const { readFile } = require('fs')
 const { resolve } = require('path')
 const { info } = require('ara-console')
@@ -12,6 +11,7 @@ const crypto = require('ara-crypto')
 const pump = require('pump')
 const pify = require('pify')
 const net = require('net')
+const ss = require('ara-secret-storage')
 const rc = require('../../rc')()
 
 const conf = {}
@@ -31,11 +31,11 @@ async function configure(opts, program) {
       alias: 's',
       describe: 'Shared secret key for network keys associated with this node.'
     })
-    .option('name', {
+    .option('network', {
       alias: 'n',
       describe: 'Human readable network keys name.'
     })
-    .option('keys', {
+    .option('keyring', {
       alias: 'k',
       describe: 'Path to ARA network keys'
     })
@@ -44,9 +44,9 @@ async function configure(opts, program) {
     argv.identity = `did:ara:${argv.identity}`
   }
 
-  conf.keys = argv.keys
-  conf.name = argv.name
   conf.secret = argv.secret
+  conf.keyring = argv.keyring
+  conf.network = argv.network
   conf.identity = argv.identity
 }
 
@@ -72,8 +72,8 @@ async function start() {
   const keystore = JSON.parse(await pify(readFile)(path, 'utf8'))
   const secretKey = ss.decrypt(keystore, { key: password.slice(0, 16) })
 
-  const keyring = keyRing(conf.keys, { secret })
-  const buffer = await keyring.get(conf.name)
+  const keyring = keyRing(conf.keyring, { secret })
+  const buffer = await keyring.get(conf.network)
   const unpacked = unpack({ buffer })
 
   const { discoveryKey } = unpacked
