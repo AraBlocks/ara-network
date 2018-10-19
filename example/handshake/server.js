@@ -1,9 +1,8 @@
 /* eslint-disable import/no-extraneous-dependencies */
-const { unpack, keyRing } = require('../../keys')
+const { unpack, keyRing, derive } = require('../../keys')
 const { createChannel } = require('../../discovery/channel')
 const { info, warn } = require('ara-console')
 const { Handshake } = require('../../handshake')
-const ss = require('ara-secret-storage')
 const { readFile } = require('fs')
 const { resolve } = require('path')
 const inquirer = require('inquirer')
@@ -12,6 +11,7 @@ const crypto = require('ara-crypto')
 const pify = require('pify')
 const pump = require('pump')
 const net = require('net')
+const ss = require('ara-secret-storage')
 const rc = require('../../rc')()
 
 const conf = {}
@@ -31,11 +31,11 @@ async function configure(opts, program) {
       alias: 's',
       describe: 'Shared secret key for network keys associated with this node.'
     })
-    .option('name', {
+    .option('network', {
       alias: 'n',
       describe: 'Human readable network keys name.'
     })
-    .option('keys', {
+    .option('keyring', {
       alias: 'k',
       describe: 'Path to keyring'
     })
@@ -50,9 +50,9 @@ async function configure(opts, program) {
   }
 
   conf.port = argv.port
-  conf.keys = argv.keys
-  conf.name = argv.name
   conf.secret = argv.secret
+  conf.keyring = argv.keyring
+  conf.network = argv.network
   conf.identity = argv.identity
 }
 
@@ -78,8 +78,8 @@ async function start() {
   const keystore = JSON.parse(await pify(readFile)(path, 'utf8'))
   const secretKey = ss.decrypt(keystore, { key: password.slice(0, 16) })
 
-  const keyring = keyRing(conf.keys, { secret: secretKey })
-  const buffer = await keyring.get(conf.name)
+  const keyring = keyRing(conf.keyring, { secret: secretKey })
+  const buffer = await keyring.get(conf.network)
   const unpacked = unpack({ buffer })
 
   const { discoveryKey } = unpacked
@@ -96,9 +96,10 @@ async function start() {
   }
 
   function onconnection(socket) {
+    const kp = derive({ secretKey, name: conf.network })
     const handshake = new Handshake({
-      publicKey,
-      secretKey,
+      publicKey: kp.publicKey,
+      secretKey: kp.secretKey,
       secret,
       remote: { publicKey: unpacked.publicKey },
       domain: { publicKey: unpacked.domain.publicKey }
