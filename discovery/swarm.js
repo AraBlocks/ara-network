@@ -27,7 +27,7 @@ function createSwarm(opts) {
     true, {}, defaults,
     opts,
     {
-      // Note: baselining utp-native 1.7.3 due to instability of 2.x.x with hypercore
+      // Note: forcing utp-native 1.7.3 (in package.json) due to instability of 2.x.x with hypercore
       socket: opts.socket || utp()
     }
   )

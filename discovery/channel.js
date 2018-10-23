@@ -14,7 +14,7 @@ const defaults = Object.assign({
 }, dhtDefaults, rc.network.discovery.channel)
 
 /**
- * Creates a discovery channelthat uses DNS
+ * Creates a discovery channel that uses DNS
  * and DHT for peer discovery.
  * @public
  * @param {Object} opts
@@ -28,7 +28,36 @@ function createChannel(opts) {
 
   // eslint-disable-next-line no-param-reassign
   opts = extend(true, {}, defaults, opts)
-  const channel = discovery(opts)
+  const channel = Object.assign(discovery(opts), { join, leave })
+
+  function join(key, options = {}) {
+    if (!this._topics) {
+      this._topics = new Map()
+    }
+    this.leave(key)
+
+    const hex = key.toString('hex')
+
+    const topic = options.announce
+      ? this.announce(key, options)
+      : this.lookup(key)
+
+    topic.on('peer', peer => this.emit('peer', peer))
+    topic.on('update', () => this.emit('update'))
+
+    this._topics.set(hex, topic)
+  }
+
+  function leave(key) {
+    if (!this._topics) return
+
+    const hex = key.toString('hex')
+    const prev = this._topics.get(hex)
+    if (prev) {
+      prev.destroy()
+      this._topics.delete(hex)
+    }
+  }
 
   return channel
 }
