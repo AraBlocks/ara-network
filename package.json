@@ -38,7 +38,6 @@
     "ara-runtime-configuration": "github:arablocks/ara-runtime-configuration#semver:0.6.x",
     "ara-secret-storage": "github:arablocks/ara-secret-storage#semver:0.1.x",
     "async-exit-hook": "^2.0.1",
-    "bittorrent-dht": "^8.3.0",
     "collect-stream": "^1.2.1",
     "debug": "^3.1.0",
     "did-uri": "^0.2.4",
@@ -48,6 +47,9 @@
     "extend": "^3.0.1",
     "get-uri": "^2.0.2",
     "got": "^9.1.0",
+    "@hyperswarm/dht": "^0.0.1",
+    "@hyperswarm/discovery": "^1.2.0",
+    "@hyperswarm/network": "^0.0.4",
     "inquirer": "^6.0.0",
     "is-buffer": "^2.0.2",
     "merkle-tree-stream": "^3.0.3",
@@ -61,6 +63,7 @@
     "readable-stream": "^2.3.6",
     "signalhub": "^4.9.0",
     "through2": "^2.0.3",
+    "utp-native": "^1.7.3",
     "yargs": "^11.0.0"
   },
   "devDependencies": {
