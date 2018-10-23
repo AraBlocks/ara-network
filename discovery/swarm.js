@@ -1,21 +1,10 @@
-const { defaults: dnsDefaults } = require('../dns')
-const { defaults: dhtDefaults } = require('../dht')
-const discovery = require('discovery-swarm')
+const { defaults: discoveryDefaults } = require('./channel')
+const network = require('@hyperswarm/network')
 const extend = require('extend')
-const crypto = require('ara-crypto')
+const utp = require('utp-native')
 const rc = require('../rc')()
 
-const defaults = Object.assign({
-  hash: false,
-  utp: true,
-  tcp: true,
-  dns: dnsDefaults,
-  dht: dhtDefaults,
-
-  get id() {
-    return crypto.randomBytes(32)
-  },
-}, rc.network.discovery.swarm)
+const defaults = Object.assign(discoveryDefaults, rc.network.discovery.swarm)
 
 /**
  * Creates a discovery swarm server that uses DNS
@@ -32,10 +21,18 @@ function createSwarm(opts) {
     // eslint-disable-next-line no-param-reassign
     opts = {}
   }
+
   // eslint-disable-next-line no-param-reassign
-  opts = extend(true, {}, defaults, opts)
-  const server = discovery(opts)
-  return server
+  opts = extend(
+    true, {}, defaults,
+    opts,
+    {
+      // Note: baselining utp-native 1.7.3 due to instability of 2.x.x with hypercore
+      socket: opts.socket || utp()
+    }
+  )
+  const swarm = network(opts)
+  return swarm
 }
 
 module.exports = {

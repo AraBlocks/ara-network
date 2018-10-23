@@ -1,6 +1,6 @@
-const BitTorrentDHT = require('bittorrent-dht')
 const crypto = require('ara-crypto')
 const extend = require('extend')
+const dht = require('@hyperswarm/dht')
 const rc = require('./rc')()
 
 const defaults = Object.assign({
@@ -28,7 +28,7 @@ function createServer(opts) {
   }
   // eslint-disable-next-line no-param-reassign
   opts = extend(true, {}, defaults, opts)
-  const server = new BitTorrentDHT(opts)
+  const server = dht(opts)
   return server
 }
 
@@ -47,7 +47,7 @@ function createClient(opts) {
   }
   // eslint-disable-next-line no-param-reassign
   opts = extend(true, {}, defaults, opts)
-  const client = new BitTorrentDHT(opts)
+  const client = dht(opts)
   return client
 }
 

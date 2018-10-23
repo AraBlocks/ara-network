@@ -1,28 +1,27 @@
 const { createServer, createClient } = require('../dht')
-const BitTorrentDHT = require('bittorrent-dht')
 const { test } = require('ava')
 
 test('dht - createServer - no opts', (t) => {
   const server = createServer()
 
-  t.true(server instanceof BitTorrentDHT)
+  t.true(Boolean(server.holepunch && server.lookup && server.announce))
 })
 
 test('dht - createServer - opts', (t) => {
   const server = createServer({})
 
-  t.true(server instanceof BitTorrentDHT)
+  t.true(Boolean(server.holepunch && server.lookup && server.announce))
 })
 
 test('dht - createClient - no opts', (t) => {
   const client = createClient()
 
-  t.true(client instanceof BitTorrentDHT)
+  t.true(Boolean(client.holepunch && client.lookup && client.announce))
 })
 
 test('dht - createClient - opts', (t) => {
   const client = createClient({})
 
-  t.true(client instanceof BitTorrentDHT)
+  t.true(Boolean(client.holepunch && client.lookup && client.announce))
 })
 
