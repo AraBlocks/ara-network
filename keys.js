@@ -1,6 +1,5 @@
 const { Keyring } = require('./keyring')
 const isBuffer = require('is-buffer')
-const sodium = require('ara-crypto/sodium')
 const crypto = require('ara-crypto')
 const ss = require('ara-secret-storage')
 
@@ -788,10 +787,7 @@ function derive0(opts) {
 
   const rel = Buffer.concat([ KDF_CONTEXT0, Buffer.from(opts.name) ])
   const ctx = crypto.shash(rel, opts.secretKey.slice(16, 32))
-  const seed = Buffer.allocUnsafe(sodium.crypto_sign_SEEDBYTES)
-
-  // this should probably be implemented in ara-crypto
-  sodium.crypto_kdf_derive_from_key(seed, 1, ctx, opts.secretKey)
+  const seed = crypto.kdf.derive(opts.secretKey, 1, ctx)
   const { publicKey, secretKey } = crypto.ed25519.keyPair(seed)
 
   seed.fill(0)

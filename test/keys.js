@@ -1,4 +1,5 @@
 const { Keyring } = require('../keyring')
+const sodium = require('ara-crypto/sodium')
 const isBuffer = require('is-buffer')
 const crypto = require('ara-crypto')
 const keys = require('../keys')
@@ -501,6 +502,33 @@ test.cb('keys.derive0() returns a key pair', (t) => {
 
   t.true(0 !== Buffer.compare(a.publicKey, b.publicKey))
   t.true(0 !== Buffer.compare(a.secretKey, b.secretKey))
+
+  t.end()
+})
+
+test.cb('keys.derive0() returns the same key pair as crypto_kdf_derive seed', (t) => {
+  const { secretKey } = crypto.ed25519.keyPair()
+  const name = 'a'
+
+  // Using kdf.derive
+  const a = keys.derive0({ secretKey, name })
+
+  // Using sodium.crypto_kdf_derive
+  const KDF_CONTEXT0 = Buffer.from('_aranet0')
+  const rel = Buffer.concat([ KDF_CONTEXT0, Buffer.from(name) ])
+  const ctx = crypto.shash(rel, secretKey.slice(16, 32))
+  const seed = Buffer.allocUnsafe(sodium.crypto_sign_SEEDBYTES)
+  sodium.crypto_kdf_derive_from_key(seed, 1, ctx, secretKey)
+  const b = crypto.ed25519.keyPair(seed)
+
+  t.true(isBuffer(a.publicKey))
+  t.true(isBuffer(a.secretKey))
+
+  t.true(isBuffer(b.publicKey))
+  t.true(isBuffer(b.secretKey))
+
+  t.true(0 == Buffer.compare(a.publicKey, b.publicKey))
+  t.true(0 == Buffer.compare(a.secretKey, b.secretKey))
 
   t.end()
 })
