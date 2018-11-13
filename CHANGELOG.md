@@ -1,4 +1,22 @@
-<a name="1.0.0-beta.3"></a>
+# [1.0.0](https://github.com/AraBlocks/ara-network/compare/1.0.0-beta.4...1.0.0) (2018-11-13)
+
+
+### Bug Fixes
+
+* **examples/handshake:** Update handshake example ([9353269](https://github.com/AraBlocks/ara-network/commit/9353269))
+
+
+
+# [1.0.0-beta.4](https://github.com/AraBlocks/ara-network/compare/1.0.0-beta.3...1.0.0-beta.4) (2018-10-18)
+
+
+### Bug Fixes
+
+* **ara-network-keys:** corrected slice for secret key ([1acd491](https://github.com/AraBlocks/ara-network/commit/1acd491))
+* **rc.js:** Remove resolve ([d1ea96a](https://github.com/AraBlocks/ara-network/commit/d1ea96a))
+
+
+
 # [1.0.0-beta.3](https://github.com/AraBlocks/ara-network/compare/1.0.0-beta.2...1.0.0-beta.3) (2018-09-10)
 
 
@@ -12,7 +30,6 @@
 
 
 
-<a name="1.0.0-beta.2"></a>
 # [1.0.0-beta.2](https://github.com/AraBlocks/ara-network/compare/1.0.0-beta.1...1.0.0-beta.2) (2018-08-28)
 
 
@@ -23,7 +40,6 @@
 
 
 
-<a name="1.0.0-beta.1"></a>
 # [1.0.0-beta.1](https://github.com/AraBlocks/ara-network/compare/57b0276...1.0.0-beta.1) (2018-08-21)
 
 
