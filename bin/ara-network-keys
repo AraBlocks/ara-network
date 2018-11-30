@@ -88,7 +88,7 @@ and appended to the given keyring`,
 
 program.option('keyring', {
   alias: 'k',
-  default: rc.network.identity.keyring,
+  default: rc.network.identity.keyring || rc.network.keyring,
   describe: 'Keyring output path',
   required: true,
   requiresArg: true,
@@ -132,6 +132,7 @@ void async function main() {
 
   let publicKey = null
   let secretKey = null
+  let keystore = null
   let secret = null
   let buffer = null
 
@@ -144,13 +145,15 @@ void async function main() {
     void err
   }
 
-  let { password } = await inquirer.prompt([ {
-    type: 'password',
-    name: 'password',
-    message:
-    'Please enter the passphrase associated with the signing identity.\n' +
-    'Passphrase:'
-  } ])
+  let {
+    password = await inquirer.prompt([ {
+      type: 'password',
+      name: 'password',
+      message:
+      'Please enter the passphrase associated with the signing identity.\n' +
+      'Passphrase:'
+    } ])
+  } = argv
 
   if (argv.identity && 0 !== argv.identity.indexOf('did:ara:')) {
     argv.identity = `did:ara:${argv.identity}`
@@ -162,10 +165,16 @@ void async function main() {
   password = crypto.blake2b(Buffer.from(password))
   publicKey = Buffer.from(did.identifier, 'hex')
 
-  // @TODO(jwerle): this should a function of AID
-  const hash = crypto.blake2b(publicKey).toString('hex')
-  const path = resolve(rc.network.identity.root, hash, 'keystore/ara')
-  const keystore = JSON.parse(await pify(fs.readFile)(path, 'utf8'))
+  try {
+    // @TODO(jwerle): this should a function of AID
+    const hash = crypto.blake2b(publicKey).toString('hex')
+    const path = resolve(rc.network.identity.root, hash, 'keystore/ara')
+    keystore = JSON.parse(await pify(fs.readFile)(path, 'utf8'))
+  } catch (err) {
+    debug(err)
+    onfatal(new Error('Failed to read identity keystore'))
+    return
+  }
 
   try {
     secretKey = ss.decrypt(keystore, { key: password.slice(0, 16) })
