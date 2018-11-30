@@ -1,4 +1,7 @@
-<a name="1.0.1"></a>
+## [1.0.2](https://github.com/AraBlocks/ara-network/compare/1.0.1...1.0.2) (2018-11-30)
+
+
+
 ## [1.0.1](https://github.com/AraBlocks/ara-network/compare/1.0.0-beta.4...1.0.1) (2018-11-29)
 
 
@@ -8,7 +11,6 @@
 
 
 
-<a name="1.0.0-beta.4"></a>
 # [1.0.0-beta.4](https://github.com/AraBlocks/ara-network/compare/1.0.0-beta.3...1.0.0-beta.4) (2018-10-18)
 
 
@@ -19,7 +21,6 @@
 
 
 
-<a name="1.0.0-beta.3"></a>
 # [1.0.0-beta.3](https://github.com/AraBlocks/ara-network/compare/1.0.0-beta.2...1.0.0-beta.3) (2018-09-10)
 
 
@@ -33,7 +34,6 @@
 
 
 
-<a name="1.0.0-beta.2"></a>
 # [1.0.0-beta.2](https://github.com/AraBlocks/ara-network/compare/1.0.0-beta.1...1.0.0-beta.2) (2018-08-28)
 
 
@@ -44,7 +44,6 @@
 
 
 
-<a name="1.0.0-beta.1"></a>
 # [1.0.0-beta.1](https://github.com/AraBlocks/ara-network/compare/57b0276...1.0.0-beta.1) (2018-08-21)
 
 
