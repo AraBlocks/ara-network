@@ -1,3 +1,12 @@
+## [1.0.3](https://github.com/AraBlocks/ara-network/compare/1.0.2...1.0.3) (2018-12-03)
+
+
+### Bug Fixes
+
+* **bin/ara-network-keys:** Fix broken password handling ([57ad8e6](https://github.com/AraBlocks/ara-network/commit/57ad8e6))
+
+
+
 ## [1.0.2](https://github.com/AraBlocks/ara-network/compare/1.0.1...1.0.2) (2018-11-30)
 
 
