@@ -132,6 +132,7 @@ void async function main() {
 
   let publicKey = null
   let secretKey = null
+  let password = null
   let keystore = null
   let secret = null
   let buffer = null
@@ -145,15 +146,17 @@ void async function main() {
     void err
   }
 
-  let {
-    password = await inquirer.prompt([ {
+  if (argv.password) {
+    ({ password } = argv)
+  } else {
+    ({ password } = await inquirer.prompt([ {
       type: 'password',
       name: 'password',
       message:
       'Please enter the passphrase associated with the signing identity.\n' +
       'Passphrase:'
-    } ])
-  } = argv
+    } ]))
+  }
 
   if (argv.identity && 0 !== argv.identity.indexOf('did:ara:')) {
     argv.identity = `did:ara:${argv.identity}`
@@ -161,9 +164,14 @@ void async function main() {
 
   const did = new DID(argv.identity)
 
-  secret = Buffer.from(argv.secret)
-  password = crypto.blake2b(Buffer.from(password))
-  publicKey = Buffer.from(did.identifier, 'hex')
+  try {
+    secret = Buffer.from(argv.secret)
+    password = crypto.blake2b(Buffer.from(password))
+    publicKey = Buffer.from(did.identifier, 'hex')
+  } catch (err) {
+    debug(err)
+    onfatal(new Error('Failed to compute BLAKE2b password hash'))
+  }
 
   try {
     // @TODO(jwerle): this should a function of AID
