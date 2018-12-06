@@ -1,3 +1,7 @@
+# [1.1.0](https://github.com/AraBlocks/ara-network/compare/1.0.3...1.1.0) (2018-12-06)
+
+
+
 ## [1.0.3](https://github.com/AraBlocks/ara-network/compare/1.0.2...1.0.3) (2018-12-03)
 
 
