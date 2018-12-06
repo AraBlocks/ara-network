@@ -1,3 +1,12 @@
+## [1.1.1](https://github.com/AraBlocks/ara-network/compare/1.1.0...1.1.1) (2018-12-06)
+
+
+### Bug Fixes
+
+* **keyring.js:** Remove unused dep ([851a286](https://github.com/AraBlocks/ara-network/commit/851a286))
+
+
+
 # [1.1.0](https://github.com/AraBlocks/ara-network/compare/1.0.3...1.1.0) (2018-12-06)
 
 
