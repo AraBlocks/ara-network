@@ -718,13 +718,11 @@ class Keyring extends EventEmitter {
     const hash = this.hash(name)
     const key = this.key.slice(0, 32)
 
-    const unbox = crypto.createUnboxStream({ nonce, key })
     const stream = through(onwrite)
 
     let off = kSignatureSize
 
     this.ready(() => {
-      pump(unbox, stream)
       // read first entry header after signature
       process.nextTick(seek, kEntryHeaderSize)
     })
@@ -739,7 +737,7 @@ class Keyring extends EventEmitter {
           storage.read(off, size, next || onread)
           off += size
         } else {
-          unbox.end()
+          stream.end()
         }
       }
     }
@@ -758,7 +756,7 @@ class Keyring extends EventEmitter {
 
     function onread(err, buf) {
       if (err) {
-        unbox.emit('error', err)
+        stream.emit('error', err)
       } else {
         const header = {
           length: crypto.uint64.decode(buf.slice(0, 8)),
@@ -768,12 +766,9 @@ class Keyring extends EventEmitter {
         // eslint-disable-next-line no-shadow
         seek(header.length, (err, entry) => {
           if (err) {
-            unbox.emit('error', err)
+            stream.emit('error', err)
           } else if (0 === Buffer.compare(hash, header.hash)) {
-            const head = entry.slice(0, kBoxHeaderSize)
-            const body = entry.slice(kBoxHeaderSize)
-            unbox.write(head)
-            unbox.end(body)
+            stream.end(crypto.unbox(entry, { nonce, key }))
           } else {
             seek(kEntryHeaderSize)
           }
@@ -801,7 +796,6 @@ class Keyring extends EventEmitter {
     const key = this.key.slice(0, 32)
 
     const stream = through(onthrough)
-    const box = crypto.createBoxStream({ nonce, key })
 
     let buffer = null
     let length = 0
@@ -825,7 +819,7 @@ class Keyring extends EventEmitter {
         chunk = keyring.encrypt(chunk, name, keyring)
       }
 
-      done(null, chunk)
+      done(null, crypto.box(chunk, { nonce, key }))
     }
 
     function ondone(err) {
@@ -837,7 +831,7 @@ class Keyring extends EventEmitter {
     }
 
     function onlock(release) {
-      collect(pump(stream, box), oncollect)
+      collect(stream, oncollect)
 
       function oncollect(err, buf) {
         if (err) {
