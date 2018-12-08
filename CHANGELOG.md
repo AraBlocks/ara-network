@@ -1,3 +1,12 @@
+# [1.2.0](https://github.com/AraBlocks/ara-network/compare/1.1.1...1.2.0) (2018-12-08)
+
+
+### Bug Fixes
+
+* **bin/ara-network-node:** Fix argv not getting passed to multiple types of running nodes ([c899fc4](https://github.com/AraBlocks/ara-network/commit/c899fc4))
+
+
+
 ## [1.1.1](https://github.com/AraBlocks/ara-network/compare/1.1.0...1.1.1) (2018-12-06)
 
 
