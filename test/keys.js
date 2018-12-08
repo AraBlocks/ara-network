@@ -527,8 +527,8 @@ test.cb('keys.derive0() returns the same key pair as crypto_kdf_derive seed', (t
   t.true(isBuffer(b.publicKey))
   t.true(isBuffer(b.secretKey))
 
-  t.true(0 == Buffer.compare(a.publicKey, b.publicKey))
-  t.true(0 == Buffer.compare(a.secretKey, b.secretKey))
+  t.true(0 === Buffer.compare(a.publicKey, b.publicKey))
+  t.true(0 === Buffer.compare(a.secretKey, b.secretKey))
 
   t.end()
 })
