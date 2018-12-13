@@ -1,3 +1,12 @@
+# [1.3.0](https://github.com/AraBlocks/ara-network/compare/1.2.1...1.3.0) (2018-12-13)
+
+
+### Features
+
+* **bin/ara-network-node:** Introduce node restart support with '--restart' ([f3205bd](https://github.com/AraBlocks/ara-network/commit/f3205bd))
+
+
+
 ## [1.2.1](https://github.com/AraBlocks/ara-network/compare/1.2.0...1.2.1) (2018-12-08)
 
 
