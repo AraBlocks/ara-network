@@ -46,12 +46,20 @@ void program
     alias: 'C',
     describe: 'Path to configuration file'
   })
+  .option('restart', {
+    describe: 'Restart node after exit'
+  })
+
+const isChildProcess =
+  program.argv['child-process'] ||
+  program.argv._.includes('--child-process')
+
 
 // from command line
 if (!module.parent) {
   process.on('unhandledRejection', onfatal)
   process.on('uncaughtException', onfatal)
-  main()
+  process.nextTick(main)
 }
 
 /**
@@ -62,10 +70,6 @@ if (!module.parent) {
 async function main() {
   const { t, type = t } = program.argv
   const { V, version = V } = program.argv
-
-  const isChildProcess =
-    program.argv['child-process'] ||
-    program.argv._.includes('--child-process')
 
   process.title = $0
 
@@ -101,6 +105,10 @@ async function main() {
       await boot({ type: k })
     }
   }
+
+  if (!isChildProcess) {
+    setInterval(onheartbeat, 100)
+  }
 }
 
 /**
@@ -125,14 +133,58 @@ async function boot({ type }) {
   const worker = fork(argv1, argv, { stdio, cwd, env })
   const { pid, id = pid } = worker
 
-  worker.send({ id, type })
+  worker.on('disconnect', ondisconnect)
   worker.on('error', onerror)
+  worker.on('close', onclose)
+  worker.on('exit', onexit)
+  worker.send({ id, type })
+
   booted[type] = worker
+
   return worker
+
+  function onclose() {
+    warn('worker#%s: %s closed', id, type)
+  }
+
+  function ondisconnect() {
+    warn('worker#%s: %s disconnected', id, type)
+  }
 
   function onerror(err) {
     error('worker#%s: %s: error:', id, type, err.message)
+    if (true !== worker.connected) {
+      onexit()
+    }
   }
+
+  function onexit(code, signal) {
+    warn('worker#%s: %s exited', id, type)
+    delete booted[type]
+
+    if (undefined !== code && undefined !== signal) {
+      if (null !== signal) {
+        warn('Got signal: %s: Exiting with code %s', signal, code)
+      } else {
+        debug('Exiting with code: %s', code)
+      }
+    }
+
+    if (program.argv.restart) {
+      restart({ type })
+    }
+  }
+}
+
+async function restart({ type }) {
+  warn('Restarting node %s', type)
+
+  if (booted[type]) {
+    booted[type].kill()
+    delete booted[type]
+  }
+
+  process.nextTick(boot, { type })
 }
 
 /**
@@ -234,6 +286,17 @@ async function onmessage({ id, type }) {
   }
 }
 
+async function onheartbeat() {
+  if (program.argv.restart) {
+    for (const k in booted) {
+      const node = booted[k]
+      if (!node || !node.connected) {
+        restart({ type: k })
+      }
+    }
+  }
+}
+
 /**
  * Handles fatal errors.
  *
@@ -243,5 +306,8 @@ async function onmessage({ id, type }) {
 function onfatal(err) {
   debug(err)
   error('fatal:', err.message)
-  process.exit(1)
+
+  if (isChildProcess || true !== program.argv.restart) {
+    process.nextTick(process.exit, 1)
+  }
 }
