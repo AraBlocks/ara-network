@@ -11,9 +11,9 @@ const debug = require('debug')('ara:network:node')
 const pkg = require('../package.json')
 const rc = require('ara-runtime-configuration')()
 
-const $0 = basename(process.argv[1] || `${pkg.name}-node`)
 const booted = {}
 
+const $0 = basename(process.argv[1] || `${pkg.name}-node`)
 module.exports = { main, boot, program }
 
 void program
@@ -37,7 +37,7 @@ void program
     global: false,
     type: 'boolean',
   })
-  .group([ 'type', 'conf' ], 'Configuration Options:')
+  .group([ 'type', 'conf', 'restart' ], 'Configuration Options:')
   .option('type', {
     alias: 't',
     describe: 'Node type to start'
@@ -47,7 +47,8 @@ void program
     describe: 'Path to configuration file'
   })
   .option('restart', {
-    describe: 'Restart node after exit'
+    describe: 'Restart node after exit',
+    type: 'boolean',
   })
 
 const isChildProcess =
