@@ -1,6 +1,6 @@
 {
   "name": "ara-network",
-  "version": "1.3.3",
+  "version": "1.3.4",
   "description": "Join and discovery peers within the Ara network swarm",
   "main": "index.js",
   "bin": {
