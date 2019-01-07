@@ -145,11 +145,15 @@ async function boot({ type }) {
   return worker
 
   function onclose() {
-    warn('worker#%s: %s closed', id, type)
+    if (program.argv.restart) {
+      warn('worker#%s: %s closed', id, type)
+    }
   }
 
   function ondisconnect() {
-    warn('worker#%s: %s disconnected', id, type)
+    if (program.argv.restart) {
+      warn('worker#%s: %s disconnected', id, type)
+    }
   }
 
   function onerror(err) {
@@ -160,7 +164,6 @@ async function boot({ type }) {
   }
 
   function onexit(code, signal) {
-    warn('worker#%s: %s exited', id, type)
     delete booted[type]
 
     if (undefined !== code && undefined !== signal) {
@@ -172,6 +175,7 @@ async function boot({ type }) {
     }
 
     if (program.argv.restart) {
+      warn('worker#%s: %s exited', id, type)
       restart({ type })
     }
   }
