@@ -107,7 +107,7 @@ async function main() {
     }
   }
 
-  if (!isChildProcess) {
+  if (!isChildProcess && program.argv.restart) {
     setInterval(onheartbeat, 100)
   }
 }
