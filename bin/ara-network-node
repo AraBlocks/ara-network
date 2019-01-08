@@ -168,7 +168,7 @@ async function boot({ type }) {
 
     if (undefined !== code && undefined !== signal) {
       if (null !== signal) {
-        warn('Got signal: %s: Exiting with code %s', signal, code)
+        warn('Got signal: %s: Exiting with code %s', signal, code || 0)
       } else {
         debug('Exiting with code: %s', code)
       }
