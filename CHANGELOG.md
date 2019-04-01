@@ -1,3 +1,12 @@
+## [1.3.8](https://github.com/AraBlocks/ara-network/compare/1.3.7...1.3.8) (2019-04-01)
+
+
+### Bug Fixes
+
+* **bin/ara-network-node:** Call 'done()' on process.nextTick ([29d1063](https://github.com/AraBlocks/ara-network/commit/29d1063))
+
+
+
 ## [1.3.7](https://github.com/AraBlocks/ara-network/compare/1.3.6...1.3.7) (2019-03-27)
 
 
