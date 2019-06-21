@@ -48,7 +48,7 @@ $ ank -h (help)
 $ ank -i <DID> \
       -s <shared-secret-string> \
       -n <keyring-name-entry> \
-      -o <output-keyring-file> (create new shared network key)
+      -k <output-keyring-file> (create new shared network key)
 ```
 
 #### Examples
@@ -58,7 +58,7 @@ $ ank -i <DID> \
 $ ank -i 86533105b0906a782b67f1aa8266a69c606fd6df948d22178390df4a395f267a \
       -s ara-archiver \
       -n remote1 \
-      -o ~/.ara/keyrings/ara-archiver
+      -k ~/.ara/keyrings/ara-archiver
 ```
 
 * The above command would create a set of shared network key files (i.e) a secret key and a public key
