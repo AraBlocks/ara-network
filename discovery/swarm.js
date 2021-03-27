@@ -1,14 +1,12 @@
 const { defaults: dnsDefaults } = require('../dns')
 const { defaults: dhtDefaults } = require('../dht')
-const discovery = require('discovery-swarm')
+const hyperswarm = require('hyperswarm')
 const extend = require('extend')
 const crypto = require('ara-crypto')
 const rc = require('../rc')()
 
 const defaults = Object.assign({
   hash: false,
-  utp: true,
-  tcp: true,
   dns: dnsDefaults,
   dht: dhtDefaults,
 
@@ -34,7 +32,7 @@ function createSwarm(opts) {
   }
   // eslint-disable-next-line no-param-reassign
   opts = extend(true, {}, defaults, opts)
-  const server = discovery(opts)
+  const server = hyperswarm(opts)
   return server
 }
 

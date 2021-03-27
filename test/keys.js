@@ -15,27 +15,27 @@ test('keys.pack0() is a function', (t) => {
   t.true('function' === typeof keys.pack0)
 })
 
-test('keys.pack() throws TypeError for bad input', (t) => {
-  t.throws(() => keys.pack(), TypeError)
-  t.throws(() => keys.pack(null), TypeError)
-  t.throws(() => keys.pack(true), TypeError)
-  t.throws(() => keys.pack(123), TypeError)
-  t.throws(() => keys.pack(NaN), TypeError)
-  t.throws(() => keys.pack(() => {}), TypeError)
+test('keys.pack() throws {instanceOf: TypeError} for bad input', (t) => {
+  t.throws(() => keys.pack(), {instanceOf: TypeError})
+  t.throws(() => keys.pack(null), {instanceOf: TypeError})
+  t.throws(() => keys.pack(true), {instanceOf: TypeError})
+  t.throws(() => keys.pack(123), {instanceOf: TypeError})
+  t.throws(() => keys.pack(NaN), {instanceOf: TypeError})
+  t.throws(() => keys.pack(() => {}), {instanceOf: TypeError})
 })
 
-test('keys.pack() throws TypeError for bad version ranges', (t) => {
-  t.throws(() => keys.pack({ version: -1 }), TypeError)
-  t.throws(() => keys.pack({ version: 0xfff }), TypeError)
+test('keys.pack() throws {instanceOf: TypeError} for bad version ranges', (t) => {
+  t.throws(() => keys.pack({ version: -1 }), {instanceOf: TypeError})
+  t.throws(() => keys.pack({ version: 0xfff }), {instanceOf: TypeError})
 })
 
-test('keys.pack0() throws TypeError for bad input', (t) => {
-  t.throws(() => keys.pack0(), TypeError)
-  t.throws(() => keys.pack0(null), TypeError)
-  t.throws(() => keys.pack0(true), TypeError)
-  t.throws(() => keys.pack0(123), TypeError)
-  t.throws(() => keys.pack0(NaN), TypeError)
-  t.throws(() => keys.pack0(() => {}), TypeError)
+test('keys.pack0() throws {instanceOf: TypeError} for bad input', (t) => {
+  t.throws(() => keys.pack0(), {instanceOf: TypeError})
+  t.throws(() => keys.pack0(null), {instanceOf: TypeError})
+  t.throws(() => keys.pack0(true), {instanceOf: TypeError})
+  t.throws(() => keys.pack0(123), {instanceOf: TypeError})
+  t.throws(() => keys.pack0(NaN), {instanceOf: TypeError})
+  t.throws(() => keys.pack0(() => {}), {instanceOf: TypeError})
 })
 
 test('keys.pack0(opts) correctly packs keys', (t) => {
@@ -94,26 +94,26 @@ test('keys.unpack() is a function', (t) => {
   t.true('function' === typeof keys.unpack)
 })
 
-test('keys.unpack() throws TypeError for bad input', (t) => {
-  t.throws(() => keys.unpack(), TypeError)
-  t.throws(() => keys.unpack(null), TypeError)
-  t.throws(() => keys.unpack(true), TypeError)
-  t.throws(() => keys.unpack(123), TypeError)
-  t.throws(() => keys.unpack(NaN), TypeError)
-  t.throws(() => keys.unpack(() => {}), TypeError)
+test('keys.unpack() throws {instanceOf: TypeError} for bad input', (t) => {
+  t.throws(() => keys.unpack(), {instanceOf: TypeError})
+  t.throws(() => keys.unpack(null), {instanceOf: TypeError})
+  t.throws(() => keys.unpack(true), {instanceOf: TypeError})
+  t.throws(() => keys.unpack(123), {instanceOf: TypeError})
+  t.throws(() => keys.unpack(NaN), {instanceOf: TypeError})
+  t.throws(() => keys.unpack(() => {}), {instanceOf: TypeError})
 })
 
 test('keys.unpack0() is a function', (t) => {
   t.true('function' === typeof keys.unpack0)
 })
 
-test('keys.unpack0() throws TypeError for bad input', (t) => {
-  t.throws(() => keys.unpack0(), TypeError)
-  t.throws(() => keys.unpack0(null), TypeError)
-  t.throws(() => keys.unpack0(true), TypeError)
-  t.throws(() => keys.unpack0(123), TypeError)
-  t.throws(() => keys.unpack0(NaN), TypeError)
-  t.throws(() => keys.unpack0(() => {}), TypeError)
+test('keys.unpack0() throws {instanceOf: TypeError} for bad input', (t) => {
+  t.throws(() => keys.unpack0(), {instanceOf: TypeError})
+  t.throws(() => keys.unpack0(null), {instanceOf: TypeError})
+  t.throws(() => keys.unpack0(true), {instanceOf: TypeError})
+  t.throws(() => keys.unpack0(123), {instanceOf: TypeError})
+  t.throws(() => keys.unpack0(NaN), {instanceOf: TypeError})
+  t.throws(() => keys.unpack0(() => {}), {instanceOf: TypeError})
 })
 
 test('keys.unpack0(opts) correctly unpacks keys', (t) => {
@@ -184,26 +184,26 @@ test('keys.generate() is a function', (t) => {
   t.true('function' === typeof keys.generate)
 })
 
-test('keys.generate() throws TypeError for bad input', (t) => {
-  t.throws(() => keys.generate(), TypeError)
-  t.throws(() => keys.generate(null), TypeError)
-  t.throws(() => keys.generate(true), TypeError)
-  t.throws(() => keys.generate(123), TypeError)
-  t.throws(() => keys.generate(NaN), TypeError)
-  t.throws(() => keys.generate(() => {}), TypeError)
+test('keys.generate() throws {instanceOf: TypeError} for bad input', (t) => {
+  t.throws(() => keys.generate(), {instanceOf: TypeError})
+  t.throws(() => keys.generate(null), {instanceOf: TypeError})
+  t.throws(() => keys.generate(true), {instanceOf: TypeError})
+  t.throws(() => keys.generate(123), {instanceOf: TypeError})
+  t.throws(() => keys.generate(NaN), {instanceOf: TypeError})
+  t.throws(() => keys.generate(() => {}), {instanceOf: TypeError})
 })
 
 test('keys.generate0() is a function', (t) => {
   t.true('function' === typeof keys.generate0)
 })
 
-test('keys.generate0() throws TypeError for bad input', (t) => {
-  t.throws(() => keys.generate0(), TypeError)
-  t.throws(() => keys.generate0(null), TypeError)
-  t.throws(() => keys.generate0(true), TypeError)
-  t.throws(() => keys.generate0(123), TypeError)
-  t.throws(() => keys.generate0(NaN), TypeError)
-  t.throws(() => keys.generate0(() => {}), TypeError)
+test('keys.generate0() throws {instanceOf: TypeError} for bad input', (t) => {
+  t.throws(() => keys.generate0(), {instanceOf: TypeError})
+  t.throws(() => keys.generate0(null), {instanceOf: TypeError})
+  t.throws(() => keys.generate0(true), {instanceOf: TypeError})
+  t.throws(() => keys.generate0(123), {instanceOf: TypeError})
+  t.throws(() => keys.generate0(NaN), {instanceOf: TypeError})
+  t.throws(() => keys.generate0(() => {}), {instanceOf: TypeError})
 })
 
 test('keys.generate0() correctly generates packed keys', (t) => {
@@ -222,13 +222,13 @@ test('keys.encrypt0() is a function', (t) => {
   t.true('function' === typeof keys.encrypt0)
 })
 
-test('keys.encrypt0() throws TypeError for bad input', (t) => {
-  t.throws(() => keys.encrypt0(), TypeError)
-  t.throws(() => keys.encrypt0(null), TypeError)
-  t.throws(() => keys.encrypt0(true), TypeError)
-  t.throws(() => keys.encrypt0(123), TypeError)
-  t.throws(() => keys.encrypt0(NaN), TypeError)
-  t.throws(() => keys.encrypt0(() => {}), TypeError)
+test('keys.encrypt0() throws {instanceOf: TypeError} for bad input', (t) => {
+  t.throws(() => keys.encrypt0(), {instanceOf: TypeError})
+  t.throws(() => keys.encrypt0(null), {instanceOf: TypeError})
+  t.throws(() => keys.encrypt0(true), {instanceOf: TypeError})
+  t.throws(() => keys.encrypt0(123), {instanceOf: TypeError})
+  t.throws(() => keys.encrypt0(NaN), {instanceOf: TypeError})
+  t.throws(() => keys.encrypt0(() => {}), {instanceOf: TypeError})
 })
 
 test('keys.encrypt0() encrypts public network keys', (t) => {
@@ -274,13 +274,13 @@ test('keys.decrypt0() is a function', (t) => {
   t.true('function' === typeof keys.decrypt0)
 })
 
-test('keys.decrypt0() throws TypeError for bad input', (t) => {
-  t.throws(() => keys.decrypt0(), TypeError)
-  t.throws(() => keys.decrypt0(null), TypeError)
-  t.throws(() => keys.decrypt0(true), TypeError)
-  t.throws(() => keys.decrypt0(123), TypeError)
-  t.throws(() => keys.decrypt0(NaN), TypeError)
-  t.throws(() => keys.decrypt0(() => {}), TypeError)
+test('keys.decrypt0() throws {instanceOf: TypeError} for bad input', (t) => {
+  t.throws(() => keys.decrypt0(), {instanceOf: TypeError})
+  t.throws(() => keys.decrypt0(null), {instanceOf: TypeError})
+  t.throws(() => keys.decrypt0(true), {instanceOf: TypeError})
+  t.throws(() => keys.decrypt0(123), {instanceOf: TypeError})
+  t.throws(() => keys.decrypt0(NaN), {instanceOf: TypeError})
+  t.throws(() => keys.decrypt0(() => {}), {instanceOf: TypeError})
 })
 
 test('keys.decrypt0() decrypts public network keys', (t) => {
@@ -321,26 +321,26 @@ test('keys.keyPair0() is a function', (t) => {
   t.true('function' === typeof keys.keyPair0)
 })
 
-test('keys.keyPair() throws TypeError for bad input', (t) => {
-  t.throws(() => keys.keyPair(), TypeError)
-  t.throws(() => keys.keyPair(null), TypeError)
-  t.throws(() => keys.keyPair(true), TypeError)
-  t.throws(() => keys.keyPair(123), TypeError)
-  t.throws(() => keys.keyPair(NaN), TypeError)
-  t.throws(() => keys.keyPair(() => {}), TypeError)
-  t.throws(() => keys.keyPair({ version: -1 }), TypeError)
-  t.throws(() => keys.keyPair({ version: NaN }), TypeError)
-  t.throws(() => keys.keyPair({ version: 0xff }), TypeError)
-  t.throws(() => keys.keyPair({ version: 0xfff }), TypeError)
+test('keys.keyPair() throws {instanceOf: TypeError} for bad input', (t) => {
+  t.throws(() => keys.keyPair(), {instanceOf: TypeError})
+  t.throws(() => keys.keyPair(null), {instanceOf: TypeError})
+  t.throws(() => keys.keyPair(true), {instanceOf: TypeError})
+  t.throws(() => keys.keyPair(123), {instanceOf: TypeError})
+  t.throws(() => keys.keyPair(NaN), {instanceOf: TypeError})
+  t.throws(() => keys.keyPair(() => {}), {instanceOf: TypeError})
+  t.throws(() => keys.keyPair({ version: -1 }), {instanceOf: TypeError})
+  t.throws(() => keys.keyPair({ version: NaN }), {instanceOf: TypeError})
+  t.throws(() => keys.keyPair({ version: 0xff }), {instanceOf: TypeError})
+  t.throws(() => keys.keyPair({ version: 0xfff }), {instanceOf: TypeError})
 })
 
-test('keys.keyPair0() throws TypeError for bad input', (t) => {
-  t.throws(() => keys.keyPair0(), TypeError)
-  t.throws(() => keys.keyPair0(null), TypeError)
-  t.throws(() => keys.keyPair0(true), TypeError)
-  t.throws(() => keys.keyPair0(123), TypeError)
-  t.throws(() => keys.keyPair0(NaN), TypeError)
-  t.throws(() => keys.keyPair0(() => {}), TypeError)
+test('keys.keyPair0() throws {instanceOf: TypeError} for bad input', (t) => {
+  t.throws(() => keys.keyPair0(), {instanceOf: TypeError})
+  t.throws(() => keys.keyPair0(null), {instanceOf: TypeError})
+  t.throws(() => keys.keyPair0(true), {instanceOf: TypeError})
+  t.throws(() => keys.keyPair0(123), {instanceOf: TypeError})
+  t.throws(() => keys.keyPair0(NaN), {instanceOf: TypeError})
+  t.throws(() => keys.keyPair0(() => {}), {instanceOf: TypeError})
 })
 
 test('keys.keyPair0() should generate public keys', (t) => {
@@ -372,22 +372,22 @@ test('keys.keyRing0() is a function', (t) => {
 })
 
 test('keys.keyRing() throws on bad input', (t) => {
-  t.throws(() => keys.keyRing(), TypeError)
-  t.throws(() => keys.keyRing(null), TypeError)
-  t.throws(() => keys.keyRing(ram()), TypeError)
-  t.throws(() => keys.keyRing(ram(), { version: NaN }), TypeError)
-  t.throws(() => keys.keyRing(ram(), { version: -1 }), TypeError)
-  t.throws(() => keys.keyRing(ram(), { version: 0xff }), TypeError)
-  t.throws(() => keys.keyRing(ram(), { version: 0xfff }), TypeError)
+  t.throws(() => keys.keyRing(), {instanceOf: TypeError})
+  t.throws(() => keys.keyRing(null), {instanceOf: TypeError})
+  t.throws(() => keys.keyRing(ram()), {instanceOf: TypeError})
+  t.throws(() => keys.keyRing(ram(), { version: NaN }), {instanceOf: TypeError})
+  t.throws(() => keys.keyRing(ram(), { version: -1 }), {instanceOf: TypeError})
+  t.throws(() => keys.keyRing(ram(), { version: 0xff }), {instanceOf: TypeError})
+  t.throws(() => keys.keyRing(ram(), { version: 0xfff }), {instanceOf: TypeError})
 })
 
 test('keys.keyRing0() throws on bad input', (t) => {
-  t.throws(() => keys.keyRing0(), TypeError)
-  t.throws(() => keys.keyRing0(null), TypeError)
-  t.throws(() => keys.keyRing0(ram()), TypeError)
-  t.throws(() => keys.keyRing0(ram(), null), TypeError)
-  t.throws(() => keys.keyRing0(ram(), 1234), TypeError)
-  t.throws(() => keys.keyRing0(ram(), true), TypeError)
+  t.throws(() => keys.keyRing0(), {instanceOf: TypeError})
+  t.throws(() => keys.keyRing0(null), {instanceOf: TypeError})
+  t.throws(() => keys.keyRing0(ram()), {instanceOf: TypeError})
+  t.throws(() => keys.keyRing0(ram(), null), {instanceOf: TypeError})
+  t.throws(() => keys.keyRing0(ram(), 1234), {instanceOf: TypeError})
+  t.throws(() => keys.keyRing0(ram(), true), {instanceOf: TypeError})
 })
 
 test('keys.keyRing() returns a Keyring', async (t) => {
@@ -421,60 +421,60 @@ test.cb('keys.derive0() is a function', (t) => {
 })
 
 test.cb('keys.derive() throws on bad input', (t) => {
-  t.throws(() => keys.derive(), TypeError)
-  t.throws(() => keys.derive({}), TypeError)
-  t.throws(() => keys.derive({ version: '' }), TypeError)
-  t.throws(() => keys.derive({ version: null }), TypeError)
-  t.throws(() => keys.derive({ version: true }), TypeError)
-  t.throws(() => keys.derive({ version: 1234 }), TypeError)
-  t.throws(() => keys.derive({ version: () => {} }), TypeError)
-  t.throws(() => keys.derive({ version: -1 }), TypeError)
-  t.throws(() => keys.derive({ version: 23 }), TypeError)
-  t.throws(() => keys.derive({ version: NaN }), TypeError)
-  t.throws(() => keys.derive({ version: 0xfff }), TypeError)
+  t.throws(() => keys.derive(), {instanceOf: TypeError})
+  t.throws(() => keys.derive({}), {instanceOf: TypeError})
+  t.throws(() => keys.derive({ version: '' }), {instanceOf: TypeError})
+  t.throws(() => keys.derive({ version: null }), {instanceOf: TypeError})
+  t.throws(() => keys.derive({ version: true }), {instanceOf: TypeError})
+  t.throws(() => keys.derive({ version: 1234 }), {instanceOf: TypeError})
+  t.throws(() => keys.derive({ version: () => {} }), {instanceOf: TypeError})
+  t.throws(() => keys.derive({ version: -1 }), {instanceOf: TypeError})
+  t.throws(() => keys.derive({ version: 23 }), {instanceOf: TypeError})
+  t.throws(() => keys.derive({ version: NaN }), {instanceOf: TypeError})
+  t.throws(() => keys.derive({ version: 0xfff }), {instanceOf: TypeError})
   t.end()
 })
 
 test.cb('keys.derive0() throws on bad input', (t) => {
-  t.throws(() => keys.derive0(), TypeError)
-  t.throws(() => keys.derive0(''), TypeError)
-  t.throws(() => keys.derive0(null), TypeError)
-  t.throws(() => keys.derive0(true), TypeError)
-  t.throws(() => keys.derive0(1234), TypeError)
-  t.throws(() => keys.derive0(() => {}), TypeError)
-  t.throws(() => keys.derive0({}), TypeError)
+  t.throws(() => keys.derive0(), {instanceOf: TypeError})
+  t.throws(() => keys.derive0(''), {instanceOf: TypeError})
+  t.throws(() => keys.derive0(null), {instanceOf: TypeError})
+  t.throws(() => keys.derive0(true), {instanceOf: TypeError})
+  t.throws(() => keys.derive0(1234), {instanceOf: TypeError})
+  t.throws(() => keys.derive0(() => {}), {instanceOf: TypeError})
+  t.throws(() => keys.derive0({}), {instanceOf: TypeError})
 
-  t.throws(() => keys.derive0({ secretKey: '' }), TypeError)
-  t.throws(() => keys.derive0({ secretKey: null }), TypeError)
-  t.throws(() => keys.derive0({ secretKey: true }), TypeError)
-  t.throws(() => keys.derive0({ secretKey: 1234 }), TypeError)
-  t.throws(() => keys.derive0({ secretKey: () => {} }), TypeError)
+  t.throws(() => keys.derive0({ secretKey: '' }), {instanceOf: TypeError})
+  t.throws(() => keys.derive0({ secretKey: null }), {instanceOf: TypeError})
+  t.throws(() => keys.derive0({ secretKey: true }), {instanceOf: TypeError})
+  t.throws(() => keys.derive0({ secretKey: 1234 }), {instanceOf: TypeError})
+  t.throws(() => keys.derive0({ secretKey: () => {} }), {instanceOf: TypeError})
   t.throws(() => keys.derive0({ secretKey: Buffer.alloc(0) }), RangeError)
   t.throws(() => keys.derive0({ secretKey: Buffer.alloc(16) }), RangeError)
 
   t.throws(() => keys.derive0({
     secretKey: Buffer.alloc(32),
-  }), TypeError)
+  }), {instanceOf: TypeError})
 
   t.throws(() => keys.derive0({
     secretKey: Buffer.alloc(32),
     name: null
-  }), TypeError)
+  }), {instanceOf: TypeError})
 
   t.throws(() => keys.derive0({
     secretKey: Buffer.alloc(32),
     name: true
-  }), TypeError)
+  }), {instanceOf: TypeError})
 
   t.throws(() => keys.derive0({
     secretKey: Buffer.alloc(32),
     name: 1234
-  }), TypeError)
+  }), {instanceOf: TypeError})
 
   t.throws(() => keys.derive0({
     secretKey: Buffer.alloc(32),
     name: () => {}
-  }), TypeError)
+  }), {instanceOf: TypeError})
 
   t.throws(() => keys.derive0({
     secretKey: Buffer.alloc(32),

@@ -16,9 +16,9 @@ test('Handshake simple', async (t) => {
   t.plan(31)
 
   // 3
-  t.throws(() => new Handshake(), TypeError)
-  t.throws(() => new Handshake(null), TypeError)
-  t.throws(() => new Handshake(true), TypeError)
+  t.throws(() => new Handshake(), {instanceOf: TypeError})
+  t.throws(() => new Handshake(null), {instanceOf: TypeError})
+  t.throws(() => new Handshake(true), {instanceOf: TypeError})
 
   // 1
   t.true('string' === typeof Handshake.VERSION)

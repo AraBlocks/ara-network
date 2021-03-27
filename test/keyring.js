@@ -48,49 +48,49 @@ test('computeSignature(...) throws on bad input', async (t) => {
   const storage = ram()
   const key = crypto.randomBytes(64)
 
-  await t.throws(computeSignature(), TypeError)
-  await t.throws(computeSignature(''), TypeError)
-  await t.throws(computeSignature(null), TypeError)
-  await t.throws(computeSignature(true), TypeError)
-  await t.throws(computeSignature(1234), TypeError)
+  await t.throws(computeSignature(), {instanceOf: TypeError})
+  await t.throws(computeSignature(''), {instanceOf: TypeError})
+  await t.throws(computeSignature(null), {instanceOf: TypeError})
+  await t.throws(computeSignature(true), {instanceOf: TypeError})
+  await t.throws(computeSignature(1234), {instanceOf: TypeError})
 
-  await t.throws(computeSignature(storage), TypeError)
-  await t.throws(computeSignature(storage, ''), TypeError)
-  await t.throws(computeSignature(storage, null), TypeError)
-  await t.throws(computeSignature(storage, true), TypeError)
-  await t.throws(computeSignature(storage, 1234), TypeError)
-  await t.throws(computeSignature(storage, Buffer.alloc(0)), TypeError)
+  await t.throws(computeSignature(storage), {instanceOf: TypeError})
+  await t.throws(computeSignature(storage, ''), {instanceOf: TypeError})
+  await t.throws(computeSignature(storage, null), {instanceOf: TypeError})
+  await t.throws(computeSignature(storage, true), {instanceOf: TypeError})
+  await t.throws(computeSignature(storage, 1234), {instanceOf: TypeError})
+  await t.throws(computeSignature(storage, Buffer.alloc(0)), {instanceOf: TypeError})
 
-  t.throws(() => computeSignature(storage, key, ''), TypeError)
-  t.throws(() => computeSignature(storage, key, { }), TypeError)
-  t.throws(() => computeSignature(storage, key, null), TypeError)
-  t.throws(() => computeSignature(storage, key, true), TypeError)
-  t.throws(() => computeSignature(storage, key, 1234), TypeError)
+  t.throws(() => computeSignature(storage, key, ''), {instanceOf: TypeError})
+  t.throws(() => computeSignature(storage, key, { }), {instanceOf: TypeError})
+  t.throws(() => computeSignature(storage, key, null), {instanceOf: TypeError})
+  t.throws(() => computeSignature(storage, key, true), {instanceOf: TypeError})
+  t.throws(() => computeSignature(storage, key, 1234), {instanceOf: TypeError})
 })
 
 test('computeRoots(storage, cb) throws on bad input', async (t) => {
   const storage = ram()
 
-  await t.throws(computeRoots(), TypeError)
-  await t.throws(computeRoots(''), TypeError)
-  await t.throws(computeRoots(null), TypeError)
-  await t.throws(computeRoots(true), TypeError)
-  await t.throws(computeRoots(1234), TypeError)
+  await t.throws(computeRoots(), {instanceOf: TypeError})
+  await t.throws(computeRoots(''), {instanceOf: TypeError})
+  await t.throws(computeRoots(null), {instanceOf: TypeError})
+  await t.throws(computeRoots(true), {instanceOf: TypeError})
+  await t.throws(computeRoots(1234), {instanceOf: TypeError})
 
-  t.throws(() => computeRoots(storage, ''), TypeError)
-  t.throws(() => computeRoots(storage, null), TypeError)
-  t.throws(() => computeRoots(storage, true), TypeError)
-  t.throws(() => computeRoots(storage, 1234), TypeError)
-  t.throws(() => computeRoots(storage, Buffer.alloc(0)), TypeError)
+  t.throws(() => computeRoots(storage, ''), {instanceOf: TypeError})
+  t.throws(() => computeRoots(storage, null), {instanceOf: TypeError})
+  t.throws(() => computeRoots(storage, true), {instanceOf: TypeError})
+  t.throws(() => computeRoots(storage, 1234), {instanceOf: TypeError})
+  t.throws(() => computeRoots(storage, Buffer.alloc(0)), {instanceOf: TypeError})
 })
 
 test('computeRoots(storage, cb) rejects on bad input', async (t) => {
   const storage = ram()
-  await t.throws(computeRoots(''), TypeError)
-  await t.throws(computeRoots(null), TypeError)
-  await t.throws(computeRoots(true), TypeError)
-  await t.throws(computeRoots(1234), TypeError)
-  await t.throws(computeRoots(storage), Error)
+  await t.throws(computeRoots(''), {instanceOf: TypeError})
+  await t.throws(computeRoots(null), {instanceOf: TypeError})
+  await t.throws(computeRoots(true), {instanceOf: TypeError})
+  await t.throws(computeRoots(1234), {instanceOf: TypeError})
+  await t.throws(computeRoots(storage), {instanceOf: Error})
 })
 
 test('Keyring(storage, opts) throws on bad input', (t) => {
@@ -105,43 +105,43 @@ test('Keyring(storage, opts) throws on bad input', (t) => {
   const nonce = crypto.randomBytes(32)
   const key = crypto.randomBytes(32)
 
-  t.throws(() => Keyring(), TypeError)
-  t.throws(() => new Keyring(), TypeError)
-  t.throws(() => new Keyring(''), TypeError)
-  t.throws(() => new Keyring(null), TypeError)
-  t.throws(() => new Keyring(1234), TypeError)
-  t.throws(() => new Keyring(true), TypeError)
-  t.throws(() => new Keyring(() => ''), TypeError)
-  t.throws(() => new Keyring(() => null), TypeError)
-  t.throws(() => new Keyring(() => 1234), TypeError)
-  t.throws(() => new Keyring(() => true), TypeError)
-  t.throws(() => new Keyring(() => () => { }), TypeError)
-  t.throws(() => new Keyring({}), TypeError)
-  t.throws(() => new Keyring({ open }), TypeError)
-  t.throws(() => new Keyring({ open, stat }), TypeError)
-  t.throws(() => new Keyring({ open, stat, read }), TypeError)
-  t.throws(() => new Keyring({ open, stat, read, write }, ''), TypeError)
-  t.throws(() => new Keyring({ open, stat, read, write }, null), TypeError)
-  t.throws(() => new Keyring({ open, stat, read, write }, 1234), TypeError)
-  t.throws(() => new Keyring({ open, stat, read, write }, true), TypeError)
-  t.throws(() => new Keyring({ open, stat, read, write }, () => { }), TypeError)
-  t.throws(() => new Keyring({ open, stat, read, write }, {}), TypeError)
-  t.throws(() => new Keyring({ open, stat, read, write }, { nonce }), TypeError)
-  t.throws(() => new Keyring({ open, stat, read, write }, { key }), TypeError)
+  t.throws(() => Keyring(), {instanceOf: TypeError})
+  t.throws(() => new Keyring(), {instanceOf: TypeError})
+  t.throws(() => new Keyring(''), {instanceOf: TypeError})
+  t.throws(() => new Keyring(null), {instanceOf: TypeError})
+  t.throws(() => new Keyring(1234), {instanceOf: TypeError})
+  t.throws(() => new Keyring(true), {instanceOf: TypeError})
+  t.throws(() => new Keyring(() => ''), {instanceOf: TypeError})
+  t.throws(() => new Keyring(() => null), {instanceOf: TypeError})
+  t.throws(() => new Keyring(() => 1234), {instanceOf: TypeError})
+  t.throws(() => new Keyring(() => true), {instanceOf: TypeError})
+  t.throws(() => new Keyring(() => () => { }), {instanceOf: TypeError})
+  t.throws(() => new Keyring({}), {instanceOf: TypeError})
+  t.throws(() => new Keyring({ open }), {instanceOf: TypeError})
+  t.throws(() => new Keyring({ open, stat }), {instanceOf: TypeError})
+  t.throws(() => new Keyring({ open, stat, read }), {instanceOf: TypeError})
+  t.throws(() => new Keyring({ open, stat, read, write }, ''), {instanceOf: TypeError})
+  t.throws(() => new Keyring({ open, stat, read, write }, null), {instanceOf: TypeError})
+  t.throws(() => new Keyring({ open, stat, read, write }, 1234), {instanceOf: TypeError})
+  t.throws(() => new Keyring({ open, stat, read, write }, true), {instanceOf: TypeError})
+  t.throws(() => new Keyring({ open, stat, read, write }, () => { }), {instanceOf: TypeError})
+  t.throws(() => new Keyring({ open, stat, read, write }, {}), {instanceOf: TypeError})
+  t.throws(() => new Keyring({ open, stat, read, write }, { nonce }), {instanceOf: TypeError})
+  t.throws(() => new Keyring({ open, stat, read, write }, { key }), {instanceOf: TypeError})
 
   t.throws(() => new Keyring({
     open, stat, read, write
   }, {
     nonce,
     key: key.slice(0, -1)
-  }), TypeError)
+  }), {instanceOf: TypeError})
 
   t.throws(() => new Keyring({
     open, stat, read, write
   }, {
     nonce: nonce.slice(0, 23),
     key,
-  }), TypeError)
+  }), {instanceOf: TypeError})
 
   t.throws(() => new Keyring({
     open, stat, read, write
@@ -149,7 +149,7 @@ test('Keyring(storage, opts) throws on bad input', (t) => {
     secret,
     nonce,
     key: key.slice(0, -1)
-  }), TypeError)
+  }), {instanceOf: TypeError})
 
   t.throws(() => new Keyring({
     open, stat, read, write
@@ -157,13 +157,13 @@ test('Keyring(storage, opts) throws on bad input', (t) => {
     secret,
     nonce: nonce.slice(0, 23),
     key,
-  }), TypeError)
+  }), {instanceOf: TypeError})
 
   t.throws(() => new Keyring({
     open, stat, read, write
   }, {
     secret: empty
-  }), TypeError)
+  }), {instanceOf: TypeError})
 })
 
 test('Keyring(storage, opts) instance', (t) => {
@@ -242,12 +242,12 @@ test.cb('Keyring#ready(cb) is called when ready', (t) => {
 test('Keyring#ready(cb) throws on bad input', (t) => {
   const secret = Buffer.alloc(64).fill(1)
   const keyring = new Keyring(ram, { secret })
-  t.throws(() => keyring.ready(''), TypeError)
-  t.throws(() => keyring.ready([ ]), TypeError)
-  t.throws(() => keyring.ready({ }), TypeError)
-  t.throws(() => keyring.ready(null), TypeError)
-  t.throws(() => keyring.ready(true), TypeError)
-  t.throws(() => keyring.ready(1234), TypeError)
+  t.throws(() => keyring.ready(''), {instanceOf: TypeError})
+  t.throws(() => keyring.ready([ ]), {instanceOf: TypeError})
+  t.throws(() => keyring.ready({ }), {instanceOf: TypeError})
+  t.throws(() => keyring.ready(null), {instanceOf: TypeError})
+  t.throws(() => keyring.ready(true), {instanceOf: TypeError})
+  t.throws(() => keyring.ready(1234), {instanceOf: TypeError})
 })
 
 test.cb('Keyring#ready(cb) throws on bad state', (t) => {
@@ -321,12 +321,12 @@ test.cb('Keyring#proof(cb) returns a computed proof.', (t) => {
 test('Keyring#proof(cb) throws on bad input.', (t) => {
   const secret = Buffer.alloc(64).fill(1)
   const keyring = new Keyring(ram, { secret })
-  t.throws(() => keyring.proof(''), TypeError)
-  t.throws(() => keyring.proof([ ]), TypeError)
-  t.throws(() => keyring.proof({ }), TypeError)
-  t.throws(() => keyring.proof(null), TypeError)
-  t.throws(() => keyring.proof(true), TypeError)
-  t.throws(() => keyring.proof(1234), TypeError)
+  t.throws(() => keyring.proof(''), {instanceOf: TypeError})
+  t.throws(() => keyring.proof([ ]), {instanceOf: TypeError})
+  t.throws(() => keyring.proof({ }), {instanceOf: TypeError})
+  t.throws(() => keyring.proof(null), {instanceOf: TypeError})
+  t.throws(() => keyring.proof(true), {instanceOf: TypeError})
+  t.throws(() => keyring.proof(1234), {instanceOf: TypeError})
 })
 
 test('Keyring#proof() returns a promise', async (t) => {
@@ -494,7 +494,7 @@ test('Keyring#append(name, key, cb) throws if not writable.', async (t) => {
   const keyring = new Keyring(storage, { secret, readonly: true })
   const key = crypto.randomBytes(32)
 
-  await t.throws(keyring.append('test', key), TypeError)
+  await t.throws(keyring.append('test', key), {instanceOf: TypeError})
   await new Promise((resolve) => {
     keyring.append('test', key, (err) => {
       t.true(null !== err)
