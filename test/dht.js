@@ -1,6 +1,6 @@
 const { createServer, createClient } = require('../dht')
 const BitTorrentDHT = require('bittorrent-dht')
-const { test } = require('ava')
+const test = require('ava')
 
 test('dht - createServer - no opts', (t) => {
   const server = createServer()

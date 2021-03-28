@@ -1,6 +1,6 @@
 const { createServer } = require('../dns')
 const discovery = require('dns-discovery')
-const { test } = require('ava')
+const test = require('ava')
 
 test('dns - createServer - no opts', (t) => {
   const server = createServer()

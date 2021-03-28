@@ -1,7 +1,7 @@
 const { createServer, createChannel, createSwarm } = require('../discovery')
 const discoveryChannel = require('discovery-channel')
 const discoverySwarm = require('discovery-swarm')
-const { test } = require('ava')
+const test = require('ava')
 
 test('discovery - createSwarm - no opts', (t) => {
   const server = createSwarm()

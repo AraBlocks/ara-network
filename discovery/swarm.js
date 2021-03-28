@@ -1,6 +1,6 @@
 const { defaults: dnsDefaults } = require('../dns')
 const { defaults: dhtDefaults } = require('../dht')
-const hyperswarm = require('hyperswarm')
+const discovery = require('discovery-swarm')
 const extend = require('extend')
 const crypto = require('ara-crypto')
 const rc = require('../rc')()
@@ -32,7 +32,7 @@ function createSwarm(opts) {
   }
   // eslint-disable-next-line no-param-reassign
   opts = extend(true, {}, defaults, opts)
-  const server = hyperswarm(opts)
+  const server = discovery(opts)
   return server
 }
 

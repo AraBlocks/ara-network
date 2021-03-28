@@ -449,8 +449,8 @@ test.cb('keys.derive0() throws on bad input', (t) => {
   t.throws(() => keys.derive0({ secretKey: true }), {instanceOf: TypeError})
   t.throws(() => keys.derive0({ secretKey: 1234 }), {instanceOf: TypeError})
   t.throws(() => keys.derive0({ secretKey: () => {} }), {instanceOf: TypeError})
-  t.throws(() => keys.derive0({ secretKey: Buffer.alloc(0) }), RangeError)
-  t.throws(() => keys.derive0({ secretKey: Buffer.alloc(16) }), RangeError)
+  t.throws(() => keys.derive0({ secretKey: Buffer.alloc(0) }), {instanceOf: RangeError})
+  t.throws(() => keys.derive0({ secretKey: Buffer.alloc(16) }), {instanceOf: RangeError})
 
   t.throws(() => keys.derive0({
     secretKey: Buffer.alloc(32),
@@ -479,12 +479,12 @@ test.cb('keys.derive0() throws on bad input', (t) => {
   t.throws(() => keys.derive0({
     secretKey: Buffer.alloc(32),
     name: ''
-  }), RangeError)
+  }), {instanceOf: RangeError})
 
   t.throws(() => keys.derive0({
     secretKey: Buffer.alloc(32),
     name: Buffer.alloc(0)
-  }), RangeError)
+  }), {instanceOf: RangeError})
 
   t.end()
 })

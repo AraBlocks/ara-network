@@ -48,18 +48,18 @@ test('computeSignature(...) throws on bad input', async (t) => {
   const storage = ram()
   const key = crypto.randomBytes(64)
 
-  await t.throws(computeSignature(), {instanceOf: TypeError})
-  await t.throws(computeSignature(''), {instanceOf: TypeError})
-  await t.throws(computeSignature(null), {instanceOf: TypeError})
-  await t.throws(computeSignature(true), {instanceOf: TypeError})
-  await t.throws(computeSignature(1234), {instanceOf: TypeError})
+  await t.throwsAsync(computeSignature(), {instanceOf: TypeError})
+  await t.throwsAsync(computeSignature(''), {instanceOf: TypeError})
+  await t.throwsAsync(computeSignature(null), {instanceOf: TypeError})
+  await t.throwsAsync(computeSignature(true), {instanceOf: TypeError})
+  await t.throwsAsync(computeSignature(1234), {instanceOf: TypeError})
 
-  await t.throws(computeSignature(storage), {instanceOf: TypeError})
-  await t.throws(computeSignature(storage, ''), {instanceOf: TypeError})
-  await t.throws(computeSignature(storage, null), {instanceOf: TypeError})
-  await t.throws(computeSignature(storage, true), {instanceOf: TypeError})
-  await t.throws(computeSignature(storage, 1234), {instanceOf: TypeError})
-  await t.throws(computeSignature(storage, Buffer.alloc(0)), {instanceOf: TypeError})
+  await t.throwsAsync(computeSignature(storage), {instanceOf: TypeError})
+  await t.throwsAsync(computeSignature(storage, ''), {instanceOf: TypeError})
+  await t.throwsAsync(computeSignature(storage, null), {instanceOf: TypeError})
+  await t.throwsAsync(computeSignature(storage, true), {instanceOf: TypeError})
+  await t.throwsAsync(computeSignature(storage, 1234), {instanceOf: TypeError})
+  await t.throwsAsync(computeSignature(storage, Buffer.alloc(0)), {instanceOf: TypeError})
 
   t.throws(() => computeSignature(storage, key, ''), {instanceOf: TypeError})
   t.throws(() => computeSignature(storage, key, { }), {instanceOf: TypeError})
@@ -71,11 +71,11 @@ test('computeSignature(...) throws on bad input', async (t) => {
 test('computeRoots(storage, cb) throws on bad input', async (t) => {
   const storage = ram()
 
-  await t.throws(computeRoots(), {instanceOf: TypeError})
-  await t.throws(computeRoots(''), {instanceOf: TypeError})
-  await t.throws(computeRoots(null), {instanceOf: TypeError})
-  await t.throws(computeRoots(true), {instanceOf: TypeError})
-  await t.throws(computeRoots(1234), {instanceOf: TypeError})
+  await t.throwsAsync(computeRoots(), {instanceOf: TypeError})
+  await t.throwsAsync(computeRoots(''), {instanceOf: TypeError})
+  await t.throwsAsync(computeRoots(null), {instanceOf: TypeError})
+  await t.throwsAsync(computeRoots(true), {instanceOf: TypeError})
+  await t.throwsAsync(computeRoots(1234), {instanceOf: TypeError})
 
   t.throws(() => computeRoots(storage, ''), {instanceOf: TypeError})
   t.throws(() => computeRoots(storage, null), {instanceOf: TypeError})
@@ -86,11 +86,11 @@ test('computeRoots(storage, cb) throws on bad input', async (t) => {
 
 test('computeRoots(storage, cb) rejects on bad input', async (t) => {
   const storage = ram()
-  await t.throws(computeRoots(''), {instanceOf: TypeError})
-  await t.throws(computeRoots(null), {instanceOf: TypeError})
-  await t.throws(computeRoots(true), {instanceOf: TypeError})
-  await t.throws(computeRoots(1234), {instanceOf: TypeError})
-  await t.throws(computeRoots(storage), {instanceOf: Error})
+  await t.throwsAsync(computeRoots(''), {instanceOf: TypeError})
+  await t.throwsAsync(computeRoots(null), {instanceOf: TypeError})
+  await t.throwsAsync(computeRoots(true), {instanceOf: TypeError})
+  await t.throwsAsync(computeRoots(1234), {instanceOf: TypeError})
+  await t.throwsAsync(computeRoots(storage), {instanceOf: Error})
 })
 
 test('Keyring(storage, opts) throws on bad input', (t) => {
@@ -268,7 +268,7 @@ test('Keyring#ready() rejects on bad state', async (t) => {
   const keyring = new Keyring(ram, { secret })
 
   keyring.storage.close()
-  await t.throws(keyring.ready())
+  await t.throwsAsync(keyring.ready())
 })
 
 test('Keyring#ready() returns a promise', async (t) => {
@@ -469,7 +469,7 @@ test.cb('Keyring#append(name, key, cb) throws on bad storage state.', (t) => {
   }
 })
 
-test.cb('Keyring#append(name, key, cb) throws on bad storage state.', (t) => {
+test.cb('Keyring#append(name, key, cb) throws on bad storage state write.', (t) => {
   const secret = Buffer.alloc(64).fill(1)
   const storage = ram()
   const keyring = new Keyring(storage, { secret })
@@ -494,7 +494,7 @@ test('Keyring#append(name, key, cb) throws if not writable.', async (t) => {
   const keyring = new Keyring(storage, { secret, readonly: true })
   const key = crypto.randomBytes(32)
 
-  await t.throws(keyring.append('test', key), {instanceOf: TypeError})
+  await t.throwsAsync(keyring.append('test', key), {instanceOf: TypeError})
   await new Promise((resolve) => {
     keyring.append('test', key, (err) => {
       t.true(null !== err)
@@ -510,7 +510,7 @@ test('Keyring#append(...) throws in bad storage state.', async (t) => {
   const key = crypto.randomBytes(32)
   await keyring.ready()
   storage.close()
-  await t.throws(keyring.append('test', key), Error)
+  await t.throwsAsync(keyring.append('test', key), {instanceOf: Error})
 })
 
 test.cb('Keyring#get(name, cb) gets a key by name', (t) => {
