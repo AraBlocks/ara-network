@@ -86,7 +86,6 @@ test('Handshake simple', async (t) => {
         remote.state.session.local.publicKey,
         hello.publicKey
       ))
-
       t.true(State.AUTH === client.state.phase)
       t.true(client.auth())
     })
@@ -137,7 +136,7 @@ test('Handshake simple', async (t) => {
         remote.createWriteStream().write(message)
       })
 
-      client.once('end', () => {
+      client.once('finish', () => {
         // console.log('client end')
         remote.end()
         client.destroy()

@@ -518,7 +518,7 @@ test.cb('keys.derive0() returns the same key pair as crypto_kdf_derive seed', (t
   const rel = Buffer.concat([ KDF_CONTEXT0, Buffer.from(name) ])
   const ctx = crypto.shash(rel, secretKey.slice(16, 32))
   const seed = Buffer.allocUnsafe(sodium.crypto_sign_SEEDBYTES)
-  sodium.crypto_kdf_derive_from_key(seed, 1, ctx, secretKey)
+  sodium.crypto_kdf_derive_from_key(seed, 1, ctx, secretKey.subarray(0, 32))
   const b = crypto.ed25519.keyPair(seed)
 
   t.true(isBuffer(a.publicKey))

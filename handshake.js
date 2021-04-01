@@ -45,7 +45,7 @@ class Handshake extends Duplex {
    * @see {@link State}
    */
   constructor(opts) {
-    super()
+    super(opts)
 
     if (!opts || 'object' !== typeof opts) {
       throw new TypeError('Handshake: Expecting object.')
@@ -134,7 +134,7 @@ class Handshake extends Duplex {
 
     if (crypto.auth.verify(hello.mac, hello.publicKey, key)) {
       this.state.session.remote.publicKey = hello.publicKey
-      this.state.session.remote.nonce = hello.mac.slice(0, 24)
+      this.state.session.remote.nonce = hello.mac.slice(0, crypto.crypto_secretbox_NONCEBYTES)
 
       this.state[$phase] = State.AUTH
       this.emit('hello', hello)
@@ -273,7 +273,7 @@ class Handshake extends Duplex {
     const mac = crypto.auth(session.local.publicKey, key)
     const buffer = Buffer.concat([ mac, session.local.publicKey ])
 
-    state.session.local.nonce = mac.slice(0, 24)
+    state.session.local.nonce = mac.slice(0, crypto.crypto_secretbox_NONCEBYTES)
 
     return this.push(buffer)
   }
@@ -330,7 +330,6 @@ class Handshake extends Duplex {
     ])
 
     const box = crypto.box(H, { key, nonce })
-
     return this.push(box)
   }
 
@@ -685,7 +684,7 @@ class State {
     }
 
     // use a zero buffer as default nonce
-    const { nonce = Buffer.alloc(32).fill(0) } = opts
+    const { nonce = Buffer.alloc(crypto.crypto_secretbox_NONCEBYTES).fill(0) } = opts
     const { publicKey, secretKey } = opts
     const { remote = {}, domain } = opts
     const { secret, version } = opts
