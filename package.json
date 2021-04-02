@@ -56,7 +56,7 @@
     "random-access-file": "^2.0.1",
     "random-access-http": "^2.0.1",
     "random-access-memory": "^3.0.0",
-    "readable-stream": "^2.3.7",
+    "readable-stream": "^3.6.0",
     "signalhub": "^4.9.0",
     "through2": "^4.0.2",
     "yargs": "^16.2.0"

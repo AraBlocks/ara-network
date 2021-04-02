@@ -121,7 +121,7 @@ test('Handshake simple', async (t) => {
         // console.log('client data')
         // 1
         t.true(0 === Buffer.compare(chunk, message))
-        client.end()
+        client.end(null)
       })
     })
 
@@ -138,7 +138,7 @@ test('Handshake simple', async (t) => {
         remote.createWriteStream().write(message)
       })
 
-      client.once('end', () => {
+      client.once('close', () => {
         // console.log('client end')
         remote.end()
         client.destroy()
