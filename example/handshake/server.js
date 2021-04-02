@@ -1,8 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies */
-const { unpack, keyRing, derive } = require('../../keys')
-const { createChannel } = require('../../discovery/channel')
 const { info, warn } = require('ara-console')
-const { Handshake } = require('../../handshake')
 const { readFile } = require('fs')
 const { resolve } = require('path')
 const inquirer = require('inquirer')
@@ -12,6 +9,10 @@ const pify = require('pify')
 const pump = require('pump')
 const net = require('net')
 const ss = require('ara-secret-storage')
+
+const { unpack, keyRing, derive } = require('../../keys')
+const { createChannel } = require('../../discovery/channel')
+const { Handshake } = require('../../handshake')
 const rc = require('../../rc')()
 
 const conf = {}
@@ -63,8 +64,8 @@ async function start() {
     type: 'password',
     name: 'password',
     message:
-    'Please enter the passphrase associated with the node identity.\n' +
-    'Passphrase:'
+    'Please enter the passphrase associated with the node identity.\n'
+    + 'Passphrase:'
   } ])
 
   const did = new DID(conf.identity)

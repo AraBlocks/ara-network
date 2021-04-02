@@ -1,9 +1,9 @@
 /* eslint-disable no-param-reassign */
 const { EventEmitter } = require('events')
+const MerkleGenerator = require('merkle-tree-stream/generator')
 const isBuffer = require('is-buffer')
 const collect = require('collect-stream')
 const through = require('through2')
-const merkle = require('merkle-tree-stream/generator')
 const crypto = require('ara-crypto')
 const mutex = require('mutexify')
 const fetch = require('got')
@@ -41,14 +41,16 @@ function computeSignature(storage, secretKey, cb) {
     if (!secretKey || false === isBuffer(secretKey)) {
       // eslint-disable-next-line function-paren-newline
       cb(new TypeError(
-        'computeSignature: Expecting secret key to be a buffer.'))
+        'computeSignature: Expecting secret key to be a buffer.'
+      ))
       return
     }
 
     if (64 !== secretKey.length) {
       // eslint-disable-next-line function-paren-newline
       cb(new TypeError(
-        'computeSignature: Expecting secret key to be 64 bytes.'))
+        'computeSignature: Expecting secret key to be 64 bytes.'
+      ))
       return
     }
 
@@ -89,7 +91,7 @@ function computeRoots(storage, cb) {
       return
     }
 
-    const tree = merkle({ leaf, parent })
+    const tree = new MerkleGenerator({ leaf, parent })
 
     // read first entry header after where signature will be
     let off = kSignatureSize
@@ -193,7 +195,8 @@ class Keyring extends EventEmitter {
       } else {
         // eslint-disable-next-line function-paren-newline
         throw TypeError(
-          'Keyring: Expecting storage to be an object, string, or function.')
+          'Keyring: Expecting storage to be an object, string, or function.'
+        )
       }
     }
 
@@ -212,7 +215,8 @@ class Keyring extends EventEmitter {
     if (storage.writable && 'function' !== typeof storage.write) {
       // eslint-disable-next-line function-paren-newline
       throw new TypeError(
-        'Keyring: Expecting storage.write() to be a function.')
+        'Keyring: Expecting storage.write() to be a function.'
+      )
     }
 
     if (!opts || 'object' !== typeof opts) {

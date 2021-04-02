@@ -13,4 +13,4 @@ const defaults = () => ({
   }
 })
 
-module.exports = conf => rc(extend(true, {}, defaults(), conf))
+module.exports = (conf) => rc(extend(true, {}, defaults(), conf))

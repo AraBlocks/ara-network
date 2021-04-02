@@ -1,8 +1,9 @@
-const { Handshake, State } = require('../handshake')
 const isBuffer = require('is-buffer')
 const crypto = require('ara-crypto')
-const pump = require('pump')
 const test = require('ava')
+const pump = require('pump')
+
+const { Handshake, State } = require('../handshake')
 
 test('Handshake is a function', (t) => {
   t.true('function' === typeof Handshake)
@@ -16,9 +17,9 @@ test('Handshake simple', async (t) => {
   t.plan(31)
 
   // 3
-  t.throws(() => new Handshake(), TypeError)
-  t.throws(() => new Handshake(null), TypeError)
-  t.throws(() => new Handshake(true), TypeError)
+  t.throws(() => new Handshake(), { instanceOf: TypeError })
+  t.throws(() => new Handshake(null), { instanceOf: TypeError })
+  t.throws(() => new Handshake(true), { instanceOf: TypeError })
 
   // 1
   t.true('string' === typeof Handshake.VERSION)

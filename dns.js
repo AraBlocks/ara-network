@@ -2,13 +2,14 @@ const discovery = require('dns-discovery')
 const extend = require('extend')
 const rc = require('./rc')()
 
-const defaults = Object.assign({
+const defaults = {
   multicast: true,
   interval: 1 * 60 * 1000,
   loopback: true,
   domain: 'ara.local',
   limit: 10000,
-}, rc.network.dns)
+  ...rc.network.dns
+}
 
 /**
  * Create a DNS discovery server

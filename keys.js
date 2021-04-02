@@ -1,7 +1,7 @@
-const { Keyring } = require('./keyring')
 const isBuffer = require('is-buffer')
 const crypto = require('ara-crypto')
 const ss = require('ara-secret-storage')
+const { Keyring } = require('./keyring')
 
 /**
  * Supported packed binary formats in this module

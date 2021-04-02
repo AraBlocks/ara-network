@@ -71,7 +71,9 @@ class Handshake extends Duplex {
   }
 
   _write(chunk, enc, done) {
-    done(null)
+    if ('function' === typeof enc) {
+      done = enc
+    }
 
     if (State.OKAY === this.state.phase) {
       this.source.push(chunk)
@@ -82,6 +84,8 @@ class Handshake extends Duplex {
         this.emit('error', err)
       }
     }
+
+    done(null)
   }
 
   /**
@@ -424,8 +428,8 @@ class Handshake extends Duplex {
 
     if (State.AUTH === phase && isAlice(this)) {
       if (
-        isBuffer(session.remote.publicKey) &&
-        isBuffer(session.remote.nonce)
+        isBuffer(session.remote.publicKey)
+        && isBuffer(session.remote.nonce)
       ) {
         return true
       }
@@ -658,8 +662,11 @@ class State {
    * Reserved handshake states 0x00...0x1F
    */
   static get NONE() { return 0x00 }
+
   static get HELLO() { return 0x01 }
+
   static get AUTH() { return 0x02 }
+
   static get OKAY() { return 0x1E }
 
   /**
@@ -740,19 +747,26 @@ class State {
   }
 
   get publicKey() { return this[$local].publicKey }
+
   get secretKey() { return this[$local].secretKey }
 
   get version() { return this[$version] }
+
   get session() { return this[$session] }
+
   get domain() { return this[$domain] }
+
   get remote() { return this[$remote] }
+
   get local() { return this[$local] }
+
   get nonce() { return this[$nonce] }
+
   get phase() { return this[$phase] }
 }
 
 function clone(object, extended) {
-  return Object.assign({}, object, extended)
+  return { ...object, ...extended }
 }
 
 function isBob(shake) {
@@ -760,10 +774,10 @@ function isBob(shake) {
 }
 
 function isAlice(shake) {
-  return Boolean(!isBob(shake) &&
-    shake &&
-    shake.state &&
-    shake.state.domain.publicKey)
+  return Boolean(!isBob(shake)
+    && shake
+    && shake.state
+    && shake.state.domain.publicKey)
 }
 
 function handshakeStateError() {

@@ -1,8 +1,9 @@
-const { defaults: dnsDefaults } = require('../dns')
-const { defaults: dhtDefaults } = require('../dht')
 const discovery = require('discovery-swarm')
 const extend = require('extend')
 const crypto = require('ara-crypto')
+
+const { defaults: dhtDefaults } = require('../dht')
+const { defaults: dnsDefaults } = require('../dns')
 const rc = require('../rc')()
 
 const defaults = Object.assign({
