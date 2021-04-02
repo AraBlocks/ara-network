@@ -34,7 +34,7 @@
   "homepage": "https://github.com/AraBlocks/ara-network#readme",
   "dependencies": {
     "ara-console": "^0.3.0",
-    "ara-crypto": "^0.9.3",
+    "ara-crypto": "^0.9.4",
     "ara-runtime-configuration": "^2.0.1",
     "ara-secret-storage": "^0.2.0",
     "async-exit-hook": "^2.0.1",
